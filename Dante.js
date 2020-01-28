@@ -21,6 +21,7 @@ function main() {
   var main_range = mainSheet.getRange('A3:Z1000');
   main_range.clearContent();
   main_range.clearNote();
+  setFormats();
 
   var filter_day = mainSheet.getRange("A1").getValue();
   
