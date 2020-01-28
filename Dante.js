@@ -125,7 +125,7 @@ function main() {
     internal_set("E", value["end_date"]);
     internal_set("F", value["start_time"]);
     internal_set("G", value["end_time"]);
-    internal_set("H", value["seats"].toString().concat("/".concat(value["class_size"].toString())));
+    internal_set("H", (value["class_size"] - value["seats"]).toString().concat("/".concat(value["class_size"].toString())));
     internal_set("I", value["ages"]);
     internal_set("J", "$".concat(parseInt(value["cost"]) + parseInt(value["charter_fee"])));
     mainSheet.getRange("K".concat(row_to_edit)).setNote(value["prerequisites"]);
