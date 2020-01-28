@@ -8,14 +8,14 @@ function setFormats() {
   mainSheet.getRange("D4:E1000").setNumberFormat("mm/dd/yy");
   mainSheet.getRange("F4:P1000").setNumberFormat("@");
   mainSheet.getRange("G3:H1000").setHorizontalAlignment("right");
-  mainSheet.getRange('I3:I1000').setHorizontalAlignment("right");
+  mainSheet.getRange("I3:I1000").setHorizontalAlignment("right");
   mainSheet.hideColumns(16, 11);
 }
 
 function main() {
   var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
   var curr_row = 4;
-  var main_range = mainSheet.getRange('A4:Z1000');
+  var main_range = mainSheet.getRange("A4:Z1000");
   main_range.clearContent();
   main_range.clearNote();
   setFormats();
