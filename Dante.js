@@ -6,10 +6,10 @@ function setFormats() {
   var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
   mainSheet.getRange("A4:C1000").setNumberFormat("@");
   mainSheet.getRange("D4:E1000").setNumberFormat("mm/dd/yy");
-  mainSheet.getRange("F4:O1000").setNumberFormat("@");
+  mainSheet.getRange("F4:P1000").setNumberFormat("@");
   mainSheet.getRange("G3:H1000").setHorizontalAlignment("right");
   mainSheet.getRange('I3:I1000').setHorizontalAlignment("right");
-
+  mainSheet.hideColumns(16, 11);
 }
 
 function main() {
@@ -62,8 +62,14 @@ function main() {
       to_sort.push({column: 2, ascending: false});
     } else if (first_sort == "Location") {
       to_sort.push({column: 3, ascending: true});
+    } else if (first_sort == "Day of week (MTWTFSS) and time (forwards)") {
+      to_sort.push({column: 16, ascending: true});
+      to_sort.push({column: 6, ascending: true});
+    } else if (first_sort == "Day of week (SSFTWTM) and time (backwards)") {
+      to_sort.push({column: 16, ascending: false});
+      to_sort.push({column: 6, ascending: false});
     }
-    main_range.sort(to_sort.reverse());
+    main_range.sort(to_sort);
   }
 
   function addToSheet(value, index) {
@@ -89,20 +95,28 @@ function main() {
     var class_day;
     if (value["monday"]) {
       class_day = "Monday";
+      internal_set("P", "0");
     } else if (value["tuesday"]) {
       class_day = "Tuesday";
+      internal_set("P", "1");
     } else if (value["wednesday"]) {
       class_day = "Wednesday";
+      internal_set("P", "2");
     } else if (value["thursday"]) {
       class_day = "Thursday";
+      internal_set("P", "3");
     } else if (value["friday"]) {
       class_day = "Friday";
+      internal_set("P", "4");
     } else if (value["saturday"]) {
       class_day = "Saturday";
+      internal_set("P", "5");
     } else if (value["sunday"]) {
       class_day = "Sunday";
+      internal_set("P", "6");
     } else {
       class_day = "?";
+      internal_set("P", "7");
     }
     internal_set("A", class_day); // No need to repeatedly override cell value
     internal_set("B", value["title"]);
