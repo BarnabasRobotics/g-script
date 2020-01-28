@@ -10,15 +10,18 @@ function stripHTML(string) {
 
 function setFormats() {
   var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-  mainSheet.getRange("A3:C1000").setNumberFormat("@");
-  mainSheet.getRange("D3:E1000").setNumberFormat("mm/dd/yy");
-  mainSheet.getRange("F3:O1000").setNumberFormat("@");
+  mainSheet.getRange("A4:C1000").setNumberFormat("@");
+  mainSheet.getRange("D4:E1000").setNumberFormat("mm/dd/yy");
+  mainSheet.getRange("F4:O1000").setNumberFormat("@");
+  mainSheet.getRange("G3:H1000").setHorizontalAlignment("right");
+  mainSheet.getRange('I3:I1000').setHorizontalAlignment("right");
+
 }
 
 function main() {
   var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-  var curr_row = 3;
-  var main_range = mainSheet.getRange('A3:Z1000');
+  var curr_row = 4;
+  var main_range = mainSheet.getRange('A4:Z1000');
   main_range.clearContent();
   main_range.clearNote();
   setFormats();
@@ -49,11 +52,11 @@ function main() {
   }
 
   // At this point, if A3:Z1000 is empty, no results were returned.
-  var chk_range = mainSheet.getRange("A3")
+  var chk_range = mainSheet.getRange("A4")
   if (chk_range.getValue() == "") {
     chk_range.setValue("Nothing found.")
   } else { // It is fine to proceed with sorting.
-    var first_sort = mainSheet.getRange("B2").getValue();
+    var first_sort = mainSheet.getRange("A2").getValue();
     var to_sort = [];
     if (first_sort == "Highest cost") {
       to_sort.push({column: 10, ascending: false});
@@ -118,9 +121,7 @@ function main() {
     internal_set("E", value["end_date"]);
     internal_set("F", value["start_time"]);
     internal_set("G", value["end_time"]);
-    mainSheet.getRange("G3:H1000").setHorizontalAlignment("right");
     internal_set("H", value["seats"].toString().concat("/".concat(value["class_size"].toString())));
-    mainSheet.getRange('I3:I1000').setHorizontalAlignment("right");
     internal_set("I", value["ages"]);
     internal_set("J", "$".concat(parseInt(value["cost"]) + parseInt(value["charter_fee"])));
     mainSheet.getRange("K".concat(row_to_edit)).setNote(value["prerequisites"]);
