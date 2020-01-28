@@ -92,6 +92,9 @@ function main() {
       }
     }
 
+    internal_set("A", value["address_name"]);
+    internal_set("B", value["title"]);
+
     var class_day;
     if (value["monday"]) {
       class_day = "Monday";
@@ -118,9 +121,7 @@ function main() {
       class_day = "?";
       internal_set("P", "7");
     }
-    internal_set("A", class_day); // No need to repeatedly override cell value
-    internal_set("B", value["title"]);
-    internal_set("C", value["address_name"]);
+    internal_set("C", class_day); // No need to repeatedly override cell value
     internal_set("D", value["start_date"]);
     internal_set("E", value["end_date"]);
     internal_set("F", value["start_time"]);
