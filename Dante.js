@@ -10,7 +10,9 @@ function stripHTML(string) {
 
 function setFormats() {
   var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-  mainSheet.getRange("A3:C1000").setNumberFormat("@")
+  mainSheet.getRange("A3:C1000").setNumberFormat("@");
+  mainSheet.getRange("D3:E1000").setNumberFormat("mm/dd/yy");
+  mainSheet.getRange("F3:O1000").setNumberFormat("@");
 }
 
 function main() {
