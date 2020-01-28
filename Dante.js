@@ -68,6 +68,18 @@ function main() {
     } else if (first_sort == "Day of week (SSFTWTM) and time (backwards)") {
       to_sort.push({column: 16, ascending: false});
       to_sort.push({column: 6, ascending: false});
+    } else if (first_sort == "Most seats remaining") {
+      to_sort.push({column: 17, ascending: false});
+    } else if (first_sort == "Least seats remaining") {
+      to_sort.push({column: 17, ascending: true});
+    } else if (first_sort == "Largest capacity") {
+      to_sort.push({column: 18, ascending: true});
+    } else if (first_sort == "Smallest capacity") {
+      to_sort.push({column: 18, ascending: false});
+    } else if (first_sort == "Most students") {
+      to_sort.push({column: 19, ascending: false});
+    } else if (first_sort == "Least students") {
+      to_sort.push({column: 19, ascending: true});
     }
     main_range.sort(to_sort);
   }
