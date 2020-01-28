@@ -56,6 +56,8 @@ function main() {
   if (chk_range.getValue() == "") {
     chk_range.setValue("Nothing found.")
   } else { // It is fine to proceed with sorting.
+    var forwardTimeSort = false;
+    var backwardTimeSort = false;
     var first_sort = mainSheet.getRange("A2").getValue();
     var to_sort = [];
     if (first_sort == "Highest cost") {
@@ -69,11 +71,14 @@ function main() {
     } else if (first_sort == "Location") {
       to_sort.push({column: 3, ascending: true});
     } else if (first_sort == "Day of week (MTWTFSS) and time (forwards)") {
-      main_range.setValues(customSort(main_range.getValues(), ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], 14));
       to_sort.push({column: 6, ascending: true});
+      forwardTimeSort = true;
     }
     
     main_range.sort(to_sort.reverse());
+    if (forwardTimeSort) {
+      main_range.setValues(customSort(main_range.getValues(), ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], 14));
+    }
   }
 
   function addToSheet(value, index) {
