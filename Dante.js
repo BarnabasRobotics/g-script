@@ -46,9 +46,9 @@ function main() {
   }
 
   // At this point, if A3:Z1000 is empty, no results were returned.
-  var chk_range = mainSheet.getRange("A4")
+  var chk_range = mainSheet.getRange("A4");
   if (chk_range.getValue() == "") {
-    chk_range.setValue("Nothing found.")
+    chk_range.setValue("Nothing found.");
   } else { // It is fine to proceed with sorting.
     var first_sort = mainSheet.getRange("A2").getValue();
     var to_sort = [];
