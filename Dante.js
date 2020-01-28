@@ -126,7 +126,10 @@ function main() {
     internal_set("E", value["end_date"]);
     internal_set("F", value["start_time"]);
     internal_set("G", value["end_time"]);
-    internal_set("H", (value["class_size"] - value["seats"]).toString().concat("/".concat(value["class_size"].toString())));
+    var seatsTotal = value["class_size"];
+    var seatsLeft = value["seats"];
+    var seatsTaken = seatsTotal - seatsLeft;
+    internal_set("H", seatsTaken.toString().concat("/".concat(seatsTotal.toString())));
     internal_set("I", value["ages"]);
     internal_set("J", "$".concat(parseInt(value["cost"]) + parseInt(value["charter_fee"])));
     mainSheet.getRange("K".concat(row_to_edit)).setNote(value["prerequisites"]);
@@ -134,7 +137,9 @@ function main() {
     mainSheet.getRange("M".concat(row_to_edit)).setNote(value["address"].concat("\n".concat(value["city"].concat(", CA ".concat(value["zipcode"])))));
     internal_set("N", value["name"]);
     internal_set("O", value["id"]);
-
+    internal_set("Q", seatsLeft);
+    internal_set("R", seatsTotal);
+    internal_set("S", seatsTaken);
     curr_row++;
   }
 }
