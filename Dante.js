@@ -1,5 +1,5 @@
 function stripHTML(string) {
-  return string.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&ndash;/g, "-");
+  return string.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&ndash;/g, "-").replace(/\r/, "").replace(/\n/, "");
 }
 
 function setFormats() {
@@ -9,7 +9,7 @@ function setFormats() {
   mainSheet.getRange("F4:P1000").setNumberFormat("@");
   mainSheet.getRange("G3:H1000").setHorizontalAlignment("right");
   mainSheet.getRange("I3:I1000").setHorizontalAlignment("right");
-  mainSheet.hideColumns(14, 13);
+  mainSheet.hideColumns(15, 12);
 }
 
 function main() {
@@ -63,23 +63,23 @@ function main() {
     } else if (first_sort == "Location") {
       to_sort.push({column: 3, ascending: true});
     } else if (first_sort == "Day of week (MTWTFSS) and time (forwards)") {
-      to_sort.push({column: 16, ascending: true});
+      to_sort.push({column: 17, ascending: true});
       to_sort.push({column: 6, ascending: true});
     } else if (first_sort == "Day of week (SSFTWTM) and time (backwards)") {
-      to_sort.push({column: 16, ascending: false});
+      to_sort.push({column: 17, ascending: false});
       to_sort.push({column: 6, ascending: false});
     } else if (first_sort == "Most seats remaining") {
-      to_sort.push({column: 17, ascending: false});
-    } else if (first_sort == "Least seats remaining") {
-      to_sort.push({column: 17, ascending: true});
-    } else if (first_sort == "Largest capacity") {
-      to_sort.push({column: 18, ascending: true});
-    } else if (first_sort == "Smallest capacity") {
       to_sort.push({column: 18, ascending: false});
-    } else if (first_sort == "Most students") {
-      to_sort.push({column: 19, ascending: false});
-    } else if (first_sort == "Least students") {
+    } else if (first_sort == "Least seats remaining") {
+      to_sort.push({column: 18, ascending: true});
+    } else if (first_sort == "Largest capacity") {
       to_sort.push({column: 19, ascending: true});
+    } else if (first_sort == "Smallest capacity") {
+      to_sort.push({column: 19, ascending: false});
+    } else if (first_sort == "Most students") {
+      to_sort.push({column: 20, ascending: false});
+    } else if (first_sort == "Least students") {
+      to_sort.push({column: 20, ascending: true});
     }
     main_range.sort(to_sort);
   }
@@ -110,28 +110,28 @@ function main() {
     var class_day;
     if (value["monday"]) {
       class_day = "Monday";
-      internal_set("P", "0");
+      internal_set("Q", "0");
     } else if (value["tuesday"]) {
       class_day = "Tuesday";
-      internal_set("P", "1");
+      internal_set("Q", "1");
     } else if (value["wednesday"]) {
       class_day = "Wednesday";
-      internal_set("P", "2");
+      internal_set("Q", "2");
     } else if (value["thursday"]) {
       class_day = "Thursday";
-      internal_set("P", "3");
+      internal_set("Q", "3");
     } else if (value["friday"]) {
       class_day = "Friday";
-      internal_set("P", "4");
+      internal_set("Q", "4");
     } else if (value["saturday"]) {
       class_day = "Saturday";
-      internal_set("P", "5");
+      internal_set("Q", "5");
     } else if (value["sunday"]) {
       class_day = "Sunday";
-      internal_set("P", "6");
+      internal_set("Q", "6");
     } else {
       class_day = "?";
-      internal_set("P", "7");
+      internal_set("Q", "7");
     }
     internal_set("C", class_day); // No need to repeatedly override cell value
     internal_set("D", value["start_date"]);
@@ -147,11 +147,12 @@ function main() {
     mainSheet.getRange("K".concat(row_to_edit)).setNote(value["prerequisites"]);
     mainSheet.getRange("L".concat(row_to_edit)).setNote(stripHTML(value["description"]));
     mainSheet.getRange("M".concat(row_to_edit)).setNote(value["address"].concat("\n".concat(value["city"].concat(", CA ".concat(value["zipcode"])))));
-    internal_set("N", value["name"]);
-    internal_set("O", value["id"]);
-    internal_set("Q", seatsLeft);
-    internal_set("R", seatsTotal);
-    internal_set("S", seatsTaken);
+    mainSheet.getRange("N".concat(row_to_edit)).setNote(stripHTML(value["schedule_notes"]));
+    internal_set("O", value["name"]);
+    internal_set("P", value["id"]);
+    internal_set("R", seatsLeft);
+    internal_set("S", seatsTotal);
+    internal_set("T", seatsTaken);
     curr_row++;
   }
 }
