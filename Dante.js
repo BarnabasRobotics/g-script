@@ -7,8 +7,7 @@ function setFormats() {
   mainSheet.getRange("A4:C1000").setNumberFormat("@");
   mainSheet.getRange("D4:E1000").setNumberFormat("mm/dd/yy");
   mainSheet.getRange("F4:U1000").setNumberFormat("@");
-  mainSheet.getRange("G4:H1000").setHorizontalAlignment("right");
-  mainSheet.getRange("I4:I1000").setHorizontalAlignment("right");
+  mainSheet.getRange("G4:I1000").setHorizontalAlignment("right");
   mainSheet.hideColumns(15, 12);
 }
 
