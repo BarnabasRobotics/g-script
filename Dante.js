@@ -4,10 +4,10 @@ function stripHTML(string) {
 
 function setFormats() {
   var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-  mainSheet.getRange("A4:C1000").setNumberFormat("@");
-  mainSheet.getRange("D4:E1000").setNumberFormat("mm/dd/yy");
-  mainSheet.getRange("F4:U1000").setNumberFormat("@");
-  mainSheet.getRange("G4:I1000").setHorizontalAlignment("right");
+  mainSheet.getRange("A5:C1000").setNumberFormat("@");
+  mainSheet.getRange("D5:E1000").setNumberFormat("mm/dd/yy");
+  mainSheet.getRange("F5:U1000").setNumberFormat("@");
+  mainSheet.getRange("G5:I1000").setHorizontalAlignment("right");
   mainSheet.hideColumns(15, 12);
 }
 
@@ -35,15 +35,15 @@ function makeDate(string) {
 
 function main() {
   var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-  var curr_row = 4;
-  var main_range = mainSheet.getRange("A4:Z1000");
+  var curr_row = 5;
+  var main_range = mainSheet.getRange("A5:Z1000");
   main_range.clearContent();
   main_range.clearNote();
   setFormats();
 
-  var filter_day = mainSheet.getRange("A1").getValue();
+  var filter_day = mainSheet.getRange("C3").getValue();
   
-  var search_location = mainSheet.getRange("B1").getValue();
+  var search_location = mainSheet.getRange("B3").getValue();
   var converted_search_loc = "";
   if (search_location == "All Locations") {
 
@@ -67,11 +67,11 @@ function main() {
   }
 
   // At this point, if A3:Z1000 is empty, no results were returned.
-  var chk_range = mainSheet.getRange("A4");
+  var chk_range = mainSheet.getRange("A5");
   if (chk_range.getValue() == "") {
     chk_range.setValue("Nothing found.");
   } else { // It is fine to proceed with sorting.
-    var first_sort = mainSheet.getRange("A2").getValue();
+    var first_sort = mainSheet.getRange("B1").getValue();
     var to_sort = [{column: 16, ascending: true}];
     if (first_sort == "Highest cost") {
       to_sort.push({column: 10, ascending: false});
