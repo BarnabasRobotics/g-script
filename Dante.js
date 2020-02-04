@@ -101,8 +101,12 @@ function main() {
       to_sort.push({column: 20, ascending: false});
     } else if (first_sort == "Least students") {
       to_sort.push({column: 20, ascending: true});
+    } else if (first_sort == "Longest meeting duration") {
+      to_sort.push({column: 21, ascending: false});
+    } else if (first_sort == "Shortest meeting duration") {
+      to_sort.push({column: 21, ascending: true});
     }
-    main_range.sort(to_sort);
+    main_range.sort(to_sort.reverse());
   }
 
   function addToSheet(value, index) {
