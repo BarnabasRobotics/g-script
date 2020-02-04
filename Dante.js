@@ -6,10 +6,32 @@ function setFormats() {
   var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
   mainSheet.getRange("A4:C1000").setNumberFormat("@");
   mainSheet.getRange("D4:E1000").setNumberFormat("mm/dd/yy");
-  mainSheet.getRange("F4:P1000").setNumberFormat("@");
+  mainSheet.getRange("F4:U1000").setNumberFormat("@");
   mainSheet.getRange("G3:H1000").setHorizontalAlignment("right");
   mainSheet.getRange("I3:I1000").setHorizontalAlignment("right");
   mainSheet.hideColumns(15, 12);
+}
+
+function makeDate(string) {
+  var isPM = string[string.length - 2] == "P";
+  var times = string.replace(/AM/, "").replace(/PM/, "").replace(/ /, "").split(":");
+  var d = new Date();
+  if (isPM) {
+    if (times[0] == "12") {
+      d.setHours(12, parseInt(times[1]));
+    } else {
+      d.setHours(parseInt(times[0]) + 12, parseInt(times[1]));
+    }
+  } else {
+    if (times[0] == "12") {
+      d.setHours(0, parseInt(times[1]));
+    } else {
+      d.setHours(parseInt(times[0]), parseInt(times[1]));
+    }
+  }
+  d.setFullYear(1970, 2, 1);
+  d.setSeconds(0, 0);
+  return d;
 }
 
 function main() {
@@ -51,7 +73,7 @@ function main() {
     chk_range.setValue("Nothing found.");
   } else { // It is fine to proceed with sorting.
     var first_sort = mainSheet.getRange("A2").getValue();
-    var to_sort = [];
+    var to_sort = [{column: 16, ascending: true}];
     if (first_sort == "Highest cost") {
       to_sort.push({column: 10, ascending: false});
     } else if (first_sort == "Lowest cost") {
@@ -153,6 +175,9 @@ function main() {
     internal_set("R", seatsLeft);
     internal_set("S", seatsTotal);
     internal_set("T", seatsTaken);
+    var diff = makeDate(value["end_time"]) - makeDate(value["start_time"]);
+    diff /= (1000 * 60);  // convert diff from ms to mins
+    internal_set("U", diff);
     curr_row++;
   }
 }
