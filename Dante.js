@@ -160,26 +160,26 @@ function main() {
 
   function dateStuff(class_dict, row) {
     var class_day;
-    if (class_dict["monday"]) {
-      class_day = "Monday";
+    if (class_dict["sunday"]) {
+      class_day = "Sunday";
       day_id = 0;
+    } else if (class_dict["monday"]) {
+      class_day = "Monday";
+      day_id = 1;
     } else if (class_dict["tuesday"]) {
       class_day = "Tuesday";
-      day_id = 1;
+      day_id = 2;
     } else if (class_dict["wednesday"]) {
       class_day = "Wednesday";
-      day_id = 2;
+      day_id = 3;
     } else if (class_dict["thursday"]) {
       class_day = "Thursday";
-      day_id = 3;
+      day_id = 4;
     } else if (class_dict["friday"]) {
       class_day = "Friday";
-      day_id = 4;
+      day_id = 5;
     } else if (class_dict["saturday"]) {
       class_day = "Saturday";
-      day_id = 5;
-    } else if (class_dict["sunday"]) {
-      class_day = "Sunday";
       day_id = 6;
     } else {
       class_day = "?";
