@@ -72,7 +72,7 @@ function main() {
     chk_range.setValue("Nothing found.");
   } else { // It is fine to proceed with sorting.
     var first_sort = mainSheet.getRange("B1").getValue();
-    var to_sort = [{column: 16, ascending: true}];
+    var to_sort = [];
     if (first_sort == "Highest cost") {
       to_sort.push({column: 10, ascending: false});
     } else if (first_sort == "Lowest cost") {
@@ -106,7 +106,7 @@ function main() {
     } else if (first_sort == "Shortest meeting duration") {
       to_sort.push({column: 21, ascending: true});
     }
-    main_range.sort(to_sort.reverse());
+    main_range.sort(to_sort);
   }
 
   function addToSheet(value, index) {
