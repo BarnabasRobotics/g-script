@@ -47,8 +47,6 @@ function main() {
   var converted_search_loc = "";
   if (search_location == "All Locations") {
 
-  } else if (search_location == "Anaheim (Cavalry Baptist)") {
-    converted_search_loc = "Anaheim";
   } else if (search_location == "Arcadia (FUNdamentals)") {
     converted_search_loc = "Arcadia";
   } else if (search_location == "Monrovia (EIE)") {
