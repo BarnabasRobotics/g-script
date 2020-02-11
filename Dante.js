@@ -103,6 +103,10 @@ function main() {
       to_sort.push({column: 21, ascending: false});
     } else if (first_sort == "Shortest meeting duration") {
       to_sort.push({column: 21, ascending: true});
+    } else if (first_sort == "Highest level") {
+      to_sort.push({column: 22, ascending: false});
+    } else if (first_sort == "Lowest level") {
+      to_sort.push({column: 22, ascending: true});
     }
     main_range.sort(to_sort);
   }
@@ -179,6 +183,7 @@ function main() {
     var diff = makeDate(value["end_time"]) - makeDate(value["start_time"]);
     diff /= (1000 * 60);  // convert diff from ms to mins
     internal_set("U", diff);
+    internal_set("V", value["level_id"]);
     curr_row++;
   }
 }
