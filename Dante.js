@@ -114,6 +114,47 @@ function main() {
     } else if (first_sort == "Lowest level") {
       to_sort.push({column: 23, ascending: true});
     }
+
+    var second_sort = mainSheet.getRange("B3").getValue();
+    if (second_sort == "Highest cost") {
+      to_sort.push({column: 11, ascending: false});
+    } else if (second_sort == "Lowest cost") {
+      to_sort.push({column: 11, ascending: true});
+    } else if (second_sort == "Title (A to Z)") {
+      to_sort.push({column: 2, ascending: true});
+    } else if (second_sort == "Title (Z to A)") {
+      to_sort.push({column: 2, ascending: false});
+    } else if (second_sort == "Location") {
+      to_sort.push({column: 3, ascending: true});
+    } else if (second_sort == "Teacher") {
+      to_sort.push({column: 4, ascending: true});
+    } else if (second_sort == "Day of week (MTWTFSS) and time (forwards)") {
+      to_sort.push({column: 18, ascending: true});
+      to_sort.push({column: 7, ascending: true});
+    } else if (second_sort == "Day of week (SSFTWTM) and time (backwards)") {
+      to_sort.push({column: 18, ascending: false});
+      to_sort.push({column: 7, ascending: false});
+    } else if (second_sort == "Most seats remaining") {
+      to_sort.push({column: 19, ascending: false});
+    } else if (second_sort == "Least seats remaining") {
+      to_sort.push({column: 19, ascending: true});
+    } else if (second_sort == "Largest capacity") {
+      to_sort.push({column: 20, ascending: true});
+    } else if (second_sort == "Smallest capacity") {
+      to_sort.push({column: 20, ascending: false});
+    } else if (second_sort == "Most students") {
+      to_sort.push({column: 21, ascending: false});
+    } else if (second_sort == "Least students") {
+      to_sort.push({column: 21, ascending: true});
+    } else if (second_sort == "Longest meeting duration") {
+      to_sort.push({column: 22, ascending: false});
+    } else if (second_sort == "Shortest meeting duration") {
+      to_sort.push({column: 22, ascending: true});
+    } else if (second_sort == "Highest level") {
+      to_sort.push({column: 23, ascending: false});
+    } else if (second_sort == "Lowest level") {
+      to_sort.push({column: 23, ascending: true});
+    }
     main_range.sort(to_sort);
   }
 
