@@ -41,9 +41,9 @@ function main() {
   main_range.clearNote();
   setFormats();
 
-  var filter_day = mainSheet.getRange("C3").getValue();
+  var filter_day = mainSheet.getRange("C1").getValue();
   
-  var search_location = mainSheet.getRange("B3").getValue();
+  var search_location = mainSheet.getRange("B1").getValue();
   var converted_search_loc = "";
   if (search_location == "All Locations") {
 
@@ -71,7 +71,7 @@ function main() {
   if (chk_range.getValue() == "") {
     chk_range.setValue("Nothing found.");
   } else { // It is fine to proceed with sorting.
-    var first_sort = mainSheet.getRange("B1").getValue();
+    var first_sort = mainSheet.getRange("B2").getValue();
     var to_sort = [];
     if (first_sort == "Highest cost") {
       to_sort.push({column: 10, ascending: false});
