@@ -158,9 +158,41 @@ function main() {
     main_range.sort(to_sort);
   }
 
+  function dateStuff(class_dict, row) {
+    var class_day;
+    if (class_dict["monday"]) {
+      class_day = "Monday";
+      day_id = 0;
+    } else if (class_dict["tuesday"]) {
+      class_day = "Tuesday";
+      day_id = 1;
+    } else if (class_dict["wednesday"]) {
+      class_day = "Wednesday";
+      day_id = 2;
+    } else if (class_dict["thursday"]) {
+      class_day = "Thursday";
+      day_id = 3;
+    } else if (class_dict["friday"]) {
+      class_day = "Friday";
+      day_id = 4;
+    } else if (class_dict["saturday"]) {
+      class_day = "Saturday";
+      day_id = 5;
+    } else if (class_dict["sunday"]) {
+      class_day = "Sunday";
+      day_id = 6;
+    } else {
+      class_day = "?";
+      day_id = 7;
+    }
+    mainSheet.getRange("C".concat(row)).setValue(class_day);
+    mainSheet.getRange("R".concat(row)).setValue(day_id.toString());
+  }
+
   function addToSheet(value, index) {
     var row_to_edit = curr_row.toString();
     classInfo = fetchClass(value["id"]);
+
     function internal_set(col, val) {
       var to_append = ""
       if (val == null  || val == undefined) {
@@ -169,7 +201,6 @@ function main() {
         to_append = val.toString();
       }
       mainSheet.getRange(col.concat(row_to_edit)).setValue(to_append);
-
     }
 
     if (filter_day != "All Days") {
@@ -180,34 +211,7 @@ function main() {
 
     internal_set("A", classInfo["address_name"]);
     internal_set("B", classInfo["title"]);
-
-    var class_day;
-    if (classInfo["monday"]) {
-      class_day = "Monday";
-      internal_set("R", "0");
-    } else if (classInfo["tuesday"]) {
-      class_day = "Tuesday";
-      internal_set("R", "1");
-    } else if (classInfo["wednesday"]) {
-      class_day = "Wednesday";
-      internal_set("R", "2");
-    } else if (classInfo["thursday"]) {
-      class_day = "Thursday";
-      internal_set("R", "3");
-    } else if (classInfo["friday"]) {
-      class_day = "Friday";
-      internal_set("R", "4");
-    } else if (classInfo["saturday"]) {
-      class_day = "Saturday";
-      internal_set("R", "5");
-    } else if (classInfo["sunday"]) {
-      class_day = "Sunday";
-      internal_set("R", "6");
-    } else {
-      class_day = "?";
-      internal_set("R", "7");
-    }
-    internal_set("C", class_day); // No need to repeatedly override cell classInfo
+    dateStuff(classInfo, row_to_edit);
     internal_set("D", classInfo["teacher_list"].join(", "));
     internal_set("E", classInfo["start_date"]);
     internal_set("F", classInfo["end_date"]);
@@ -225,6 +229,7 @@ function main() {
     mainSheet.getRange("O".concat(row_to_edit)).setNote(stripHTML(classInfo["schedule_notes"]));
     internal_set("P", classInfo["name"]);
     internal_set("Q", classInfo["id"]);
+    // Call to dateStuff changes row R
     internal_set("S", seatsLeft);
     internal_set("T", seatsTotal);
     internal_set("U", seatsTaken);
