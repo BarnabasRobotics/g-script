@@ -189,7 +189,7 @@ function main() {
     mainSheet.getRange("R".concat(row)).setValue(day_id.toString());
   }
 
-  function addToSheet(value, index) {
+  function addToSheet(value, _index) {
     var row_to_edit = curr_row.toString();
     classInfo = fetchClass(value["id"]);
 
