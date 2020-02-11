@@ -85,6 +85,8 @@ function main() {
       to_sort.push({column: 2, ascending: false});
     } else if (first_sort == "Location") {
       to_sort.push({column: 3, ascending: true});
+    } else if (first_sort == "Teacher") {
+      to_sort.push({column: 4, ascending: true});
     } else if (first_sort == "Day of week (MTWTFSS) and time (forwards)") {
       to_sort.push({column: 18, ascending: true});
       to_sort.push({column: 7, ascending: true});
