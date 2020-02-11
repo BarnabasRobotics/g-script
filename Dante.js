@@ -33,6 +33,10 @@ function makeDate(string) {
   return d;
 }
 
+function fetchClass(id) {
+  return JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses/".concat(id).concat("/info.json")).getContentText());
+}
+
 function main() {
   var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
   var curr_row = 5;
@@ -113,7 +117,7 @@ function main() {
 
   function addToSheet(value, index) {
     var row_to_edit = curr_row.toString();
-
+    classInfo = fetchClass(value["id"]);
     function internal_set(col, val) {
       var to_append = ""
       if (val == null  || val == undefined) {
@@ -126,64 +130,64 @@ function main() {
     }
 
     if (filter_day != "All Days") {
-      if (!(value[filter_day.toLowerCase()])) {
+      if (!(classInfo[filter_day.toLowerCase()])) {
         return;
       }
     }
 
-    internal_set("A", value["address_name"]);
-    internal_set("B", value["title"]);
+    internal_set("A", classInfo["address_name"]);
+    internal_set("B", classInfo["title"]);
 
     var class_day;
-    if (value["monday"]) {
+    if (classInfo["monday"]) {
       class_day = "Monday";
       internal_set("Q", "0");
-    } else if (value["tuesday"]) {
+    } else if (classInfo["tuesday"]) {
       class_day = "Tuesday";
       internal_set("Q", "1");
-    } else if (value["wednesday"]) {
+    } else if (classInfo["wednesday"]) {
       class_day = "Wednesday";
       internal_set("Q", "2");
-    } else if (value["thursday"]) {
+    } else if (classInfo["thursday"]) {
       class_day = "Thursday";
       internal_set("Q", "3");
-    } else if (value["friday"]) {
+    } else if (classInfo["friday"]) {
       class_day = "Friday";
       internal_set("Q", "4");
-    } else if (value["saturday"]) {
+    } else if (classInfo["saturday"]) {
       class_day = "Saturday";
       internal_set("Q", "5");
-    } else if (value["sunday"]) {
+    } else if (classInfo["sunday"]) {
       class_day = "Sunday";
       internal_set("Q", "6");
     } else {
       class_day = "?";
       internal_set("Q", "7");
     }
-    internal_set("C", class_day); // No need to repeatedly override cell value
-    internal_set("D", value["start_date"]);
-    internal_set("E", value["end_date"]);
-    internal_set("F", value["start_time"]);
-    internal_set("G", value["end_time"]);
-    var seatsTotal = value["class_size"];
-    var seatsLeft = value["seats"];
+    internal_set("C", class_day); // No need to repeatedly override cell classInfo
+    internal_set("D", classInfo["start_date"]);
+    internal_set("E", classInfo["end_date"]);
+    internal_set("F", classInfo["start_time"]);
+    internal_set("G", classInfo["end_time"]);
+    var seatsTotal = classInfo["class_size"];
+    var seatsLeft = classInfo["seats"];
     var seatsTaken = seatsTotal - seatsLeft;
     internal_set("H", seatsTaken.toString().concat("/".concat(seatsTotal.toString())));
-    internal_set("I", value["ages"]);
-    internal_set("J", "$".concat(parseInt(value["cost"]) + parseInt(value["charter_fee"])));
-    mainSheet.getRange("K".concat(row_to_edit)).setNote(value["prerequisites"]);
-    mainSheet.getRange("L".concat(row_to_edit)).setNote(stripHTML(value["description"]));
-    mainSheet.getRange("M".concat(row_to_edit)).setNote(value["address"].concat("\n".concat(value["city"].concat(", CA ".concat(value["zipcode"])))));
-    mainSheet.getRange("N".concat(row_to_edit)).setNote(stripHTML(value["schedule_notes"]));
-    internal_set("O", value["name"]);
-    internal_set("P", value["id"]);
+    internal_set("I", classInfo["ages"]);
+    internal_set("J", "$".concat(parseInt(classInfo["cost"]) + parseInt(classInfo["charter_fee"])));
+    mainSheet.getRange("K".concat(row_to_edit)).setNote(classInfo["prerequisites"]);
+    mainSheet.getRange("L".concat(row_to_edit)).setNote(stripHTML(classInfo["description"]));
+    mainSheet.getRange("M".concat(row_to_edit)).setNote(classInfo["address"].concat("\n".concat(classInfo["city"].concat(", CA ".concat(classInfo["zipcode"])))));
+    mainSheet.getRange("N".concat(row_to_edit)).setNote(stripHTML(classInfo["schedule_notes"]));
+    internal_set("O", classInfo["name"]);
+    internal_set("P", classInfo["id"]);
     internal_set("R", seatsLeft);
     internal_set("S", seatsTotal);
     internal_set("T", seatsTaken);
-    var diff = makeDate(value["end_time"]) - makeDate(value["start_time"]);
+    var diff = makeDate(classInfo["end_time"]) - makeDate(classInfo["start_time"]);
     diff /= (1000 * 60);  // convert diff from ms to mins
     internal_set("U", diff);
-    internal_set("V", value["level_id"]);
+    internal_set("V", classInfo["level_id"]);
     curr_row++;
   }
 }
