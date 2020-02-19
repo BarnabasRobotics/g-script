@@ -43,8 +43,10 @@ function convertDate(d) {
 
 function main() {
     var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-    var curr_row = 5;
     var main_range = mainSheet.getRange("A5:Z1000");
+    var protection = mainSheet.protect().setDescription("Loading...");
+    protection.setWarningOnly(true);
+    var curr_row = 5;
     main_range.clearContent();
     main_range.clearNote();
     setFormats();
@@ -169,6 +171,8 @@ function main() {
         }
         main_range.sort(to_sort);
     }
+
+    protection.remove();
 
     function dateStuff(class_dict, row) {
         var class_day;
