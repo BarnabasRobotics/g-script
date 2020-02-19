@@ -231,7 +231,7 @@ function main() {
             current_meeting = new Date(current_meeting.getTime() + 7 * 86400000); // Classes that don't only meet every 7th day don't work yet
         }
 
-        mainSheet.getRange("O".concat(row)).setValue(no_cls_dates.join(", "));
+        mainSheet.getRange("P".concat(row)).setValue(no_cls_dates.join(", "));
     }
 
     function addToSheet(value, _index) {
@@ -273,6 +273,7 @@ function main() {
         mainSheet.getRange("N".concat(row_to_edit)).setNote(stripHTML(classInfo["description"]));
         mainSheet.getRange("O".concat(row_to_edit)).setNote(classInfo["address"].concat("\n".concat(classInfo["city"].concat(", CA ".concat(classInfo["zipcode"])))));
         mainSheet.getRange("P".concat(row_to_edit)).setNote(stripHTML(classInfo["schedule_notes"]));
+        // Also set by dateStuff
         internal_set("Q", classInfo["name"]);
         internal_set("R", classInfo["id"]);
         // Call to dateStuff changes row S
