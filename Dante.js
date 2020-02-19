@@ -7,8 +7,8 @@ function setFormats() {
     mainSheet.getRange("A5:D1000").setNumberFormat("@");
     mainSheet.getRange("E5:F1000").setNumberFormat("mm/dd/yy");
     mainSheet.getRange("G5:V1000").setNumberFormat("@");
-    mainSheet.getRange("H5:J1000").setHorizontalAlignment("right");
-    mainSheet.hideColumns(16, 11);
+    mainSheet.getRange("I5:L1000").setHorizontalAlignment("right");
+    mainSheet.hideColumns(17, 10);
 }
 
 function makeDate(string) {
@@ -91,32 +91,36 @@ function main() {
             to_sort.push({column: 3, ascending: true});
         } else if (first_sort == "Teacher") {
             to_sort.push({column: 4, ascending: true});
+        } else if (first_sort == "Highest expected revenue") {
+            to_sort.push({column: 12, ascending: false});
+        } else if (first_sort == "Lowest expected revenue") {
+            to_sort.push({column: 12, ascending: true});
         } else if (first_sort == "Day of week (MTWTFSS) and time (forwards)") {
-            to_sort.push({column: 18, ascending: true});
+            to_sort.push({column: 19, ascending: true});
             to_sort.push({column: 7, ascending: true});
         } else if (first_sort == "Day of week (SSFTWTM) and time (backwards)") {
-            to_sort.push({column: 18, ascending: false});
+            to_sort.push({column: 19, ascending: false});
             to_sort.push({column: 7, ascending: false});
         } else if (first_sort == "Most seats remaining") {
-           to_sort.push({column: 19, ascending: false});
+           to_sort.push({column: 20, ascending: false});
         } else if (first_sort == "Least seats remaining") {
-            to_sort.push({column: 19, ascending: true});
-        } else if (first_sort == "Largest capacity") {
             to_sort.push({column: 20, ascending: true});
-        } else if (first_sort == "Smallest capacity") {
-            to_sort.push({column: 20, ascending: false});
-        } else if (first_sort == "Most students") {
-            to_sort.push({column: 21, ascending: false});
-        } else if (first_sort == "Least students") {
+        } else if (first_sort == "Largest capacity") {
             to_sort.push({column: 21, ascending: true});
-        } else if (first_sort == "Longest meeting duration") {
+        } else if (first_sort == "Smallest capacity") {
+            to_sort.push({column: 21, ascending: false});
+        } else if (first_sort == "Most students") {
             to_sort.push({column: 22, ascending: false});
-        } else if (first_sort == "Shortest meeting duration") {
+        } else if (first_sort == "Least students") {
             to_sort.push({column: 22, ascending: true});
-        } else if (first_sort == "Highest level") {
+        } else if (first_sort == "Longest meeting duration") {
             to_sort.push({column: 23, ascending: false});
-        } else if (first_sort == "Lowest level") {
+        } else if (first_sort == "Shortest meeting duration") {
             to_sort.push({column: 23, ascending: true});
+        } else if (first_sort == "Highest level") {
+            to_sort.push({column: 24, ascending: false});
+        } else if (first_sort == "Lowest level") {
+            to_sort.push({column: 24, ascending: true});
         }
 
         var second_sort = mainSheet.getRange("B3").getValue();
@@ -132,32 +136,37 @@ function main() {
             to_sort.push({column: 3, ascending: true});
         } else if (second_sort == "Teacher") {
             to_sort.push({column: 4, ascending: true});
-        } else if (second_sort == "Day of week (MTWTFSS) and time (forwards)") {
-            to_sort.push({column: 18, ascending: true});
+        } else if (first_sort == "Highest expected revenue") {
+            to_sort.push({column: 12, ascending: false});
+        } else if (first_sort == "Lowest expected revenue") {
+            to_sort.push({column: 12, ascending: true});
+        }
+        else if (second_sort == "Day of week (MTWTFSS) and time (forwards)") {
+            to_sort.push({column: 19, ascending: true});
             to_sort.push({column: 7, ascending: true});
         } else if (second_sort == "Day of week (SSFTWTM) and time (backwards)") {
-            to_sort.push({column: 18, ascending: false});
+            to_sort.push({column: 19, ascending: false});
             to_sort.push({column: 7, ascending: false});
         } else if (second_sort == "Most seats remaining") {
-            to_sort.push({column: 19, ascending: false});
-        } else if (second_sort == "Least seats remaining") {
-            to_sort.push({column: 19, ascending: true});
-        } else if (second_sort == "Largest capacity") {
-            to_sort.push({column: 20, ascending: true});
-        } else if (second_sort == "Smallest capacity") {
             to_sort.push({column: 20, ascending: false});
-        } else if (second_sort == "Most students") {
-            to_sort.push({column: 21, ascending: false});
-        } else if (second_sort == "Least students") {
+        } else if (second_sort == "Least seats remaining") {
+            to_sort.push({column: 20, ascending: true});
+        } else if (second_sort == "Largest capacity") {
             to_sort.push({column: 21, ascending: true});
-        } else if (second_sort == "Longest meeting duration") {
+        } else if (second_sort == "Smallest capacity") {
+            to_sort.push({column: 21, ascending: false});
+        } else if (second_sort == "Most students") {
             to_sort.push({column: 22, ascending: false});
-        } else if (second_sort == "Shortest meeting duration") {
+        } else if (second_sort == "Least students") {
             to_sort.push({column: 22, ascending: true});
-        } else if (second_sort == "Highest level") {
+        } else if (second_sort == "Longest meeting duration") {
             to_sort.push({column: 23, ascending: false});
-        } else if (second_sort == "Lowest level") {
+        } else if (second_sort == "Shortest meeting duration") {
             to_sort.push({column: 23, ascending: true});
+        } else if (second_sort == "Highest level") {
+            to_sort.push({column: 24, ascending: false});
+        } else if (second_sort == "Lowest level") {
+            to_sort.push({column: 24, ascending: true});
         }
         main_range.sort(to_sort);
     }
@@ -190,7 +199,7 @@ function main() {
             day_id = 7;
         }
         mainSheet.getRange("C".concat(row)).setValue(class_day);
-        mainSheet.getRange("R".concat(row)).setValue(day_id.toString());
+        mainSheet.getRange("S".concat(row)).setValue(day_id.toString());
 
         start_date = new Date(class_dict["start_date"]);
         end_date = new Date(class_dict["end_date"]);
@@ -256,20 +265,21 @@ function main() {
         internal_set("I", seatsTaken.toString().concat("/".concat(seatsTotal.toString())));
         internal_set("J", classInfo["ages"]);
         internal_set("K", "$".concat(parseInt(classInfo["cost"]) + parseInt(classInfo["charter_fee"])));
-        mainSheet.getRange("L".concat(row_to_edit)).setNote(classInfo["prerequisites"]);
-        mainSheet.getRange("M".concat(row_to_edit)).setNote(stripHTML(classInfo["description"]));
-        mainSheet.getRange("N".concat(row_to_edit)).setNote(classInfo["address"].concat("\n".concat(classInfo["city"].concat(", CA ".concat(classInfo["zipcode"])))));
-        mainSheet.getRange("O".concat(row_to_edit)).setNote(stripHTML(classInfo["schedule_notes"]));
-        internal_set("P", classInfo["name"]);
-        internal_set("Q", classInfo["id"]);
-        // Call to dateStuff changes row R
-        internal_set("S", seatsLeft);
-        internal_set("T", seatsTotal);
-        internal_set("U", seatsTaken);
+        internal_set("L", "$".concat(parseInt(seatsTaken) * parseInt(classInfo["cost"])));
+        mainSheet.getRange("M".concat(row_to_edit)).setNote(classInfo["prerequisites"]);
+        mainSheet.getRange("N".concat(row_to_edit)).setNote(stripHTML(classInfo["description"]));
+        mainSheet.getRange("O".concat(row_to_edit)).setNote(classInfo["address"].concat("\n".concat(classInfo["city"].concat(", CA ".concat(classInfo["zipcode"])))));
+        mainSheet.getRange("P".concat(row_to_edit)).setNote(stripHTML(classInfo["schedule_notes"]));
+        internal_set("Q", classInfo["name"]);
+        internal_set("R", classInfo["id"]);
+        // Call to dateStuff changes row S
+        internal_set("T", seatsLeft);
+        internal_set("U", seatsTotal);
+        internal_set("V", seatsTaken);
         var diff = makeDate(classInfo["end_time"]) - makeDate(classInfo["start_time"]);
         diff /= (1000 * 60);  // convert diff from ms to mins
-        internal_set("V", diff);
-        internal_set("W", classInfo["level_id"]);
+        internal_set("W", diff);
+        internal_set("X", classInfo["level_id"]);
         curr_row++;
     }
 }
