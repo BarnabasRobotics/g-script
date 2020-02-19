@@ -79,11 +79,7 @@ function main() {
     } else { // It is fine to proceed with sorting.
         var first_sort = mainSheet.getRange("B2").getValue();
         var to_sort = [];
-        if (first_sort == "Highest cost") {
-            to_sort.push({column: 11, ascending: false});
-        } else if (first_sort == "Lowest cost") {
-            to_sort.push({column: 11, ascending: true});
-        } else if (first_sort == "Title (A to Z)") {
+        if (first_sort == "Title (A to Z)") {
             to_sort.push({column: 2, ascending: true});
         } else if (first_sort == "Title (Z to A)") {
             to_sort.push({column: 2, ascending: false});
@@ -91,6 +87,10 @@ function main() {
             to_sort.push({column: 3, ascending: true});
         } else if (first_sort == "Teacher") {
             to_sort.push({column: 4, ascending: true});
+        } else if (first_sort == "Highest cost") {
+            to_sort.push({column: 11, ascending: false});
+        } else if (first_sort == "Lowest cost") {
+            to_sort.push({column: 11, ascending: true});
         } else if (first_sort == "Highest expected revenue") {
             to_sort.push({column: 12, ascending: false});
         } else if (first_sort == "Lowest expected revenue") {
@@ -124,11 +124,7 @@ function main() {
         }
 
         var second_sort = mainSheet.getRange("B3").getValue();
-        if (second_sort == "Highest cost") {
-            to_sort.push({column: 11, ascending: false});
-        } else if (second_sort == "Lowest cost") {
-            to_sort.push({column: 11, ascending: true});
-        } else if (second_sort == "Title (A to Z)") {
+        if (second_sort == "Title (A to Z)") {
             to_sort.push({column: 2, ascending: true});
         } else if (second_sort == "Title (Z to A)") {
             to_sort.push({column: 2, ascending: false});
@@ -136,12 +132,15 @@ function main() {
             to_sort.push({column: 3, ascending: true});
         } else if (second_sort == "Teacher") {
             to_sort.push({column: 4, ascending: true});
-        } else if (first_sort == "Highest expected revenue") {
+        } else if (second_sort == "Highest cost") {
+            to_sort.push({column: 11, ascending: false});
+        } else if (second_sort == "Lowest cost") {
+            to_sort.push({column: 11, ascending: true});
+        } else if (second_sort == "Highest expected revenue") {
             to_sort.push({column: 12, ascending: false});
-        } else if (first_sort == "Lowest expected revenue") {
+        } else if (second_sort == "Lowest expected revenue") {
             to_sort.push({column: 12, ascending: true});
-        }
-        else if (second_sort == "Day of week (MTWTFSS) and time (forwards)") {
+        } else if (second_sort == "Day of week (MTWTFSS) and time (forwards)") {
             to_sort.push({column: 19, ascending: true});
             to_sort.push({column: 7, ascending: true});
         } else if (second_sort == "Day of week (SSFTWTM) and time (backwards)") {
