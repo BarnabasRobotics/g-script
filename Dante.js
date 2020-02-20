@@ -8,6 +8,7 @@ function setFormats() {
     mainSheet.getRange("E5:F1000").setNumberFormat("mm/dd/yy");
     mainSheet.getRange("G5:Z1000").setNumberFormat("@");
     mainSheet.getRange("A5:Z1000").setHorizontalAlignment("right");
+    mainSheet.getRange("P5:Q1000").setHorizontalAlignment("left");
     mainSheet.hideColumns(18, 9);
 }
 
@@ -273,7 +274,7 @@ function main() {
         mainSheet.getRange("N".concat(row_to_edit)).setNote(stripHTML(classInfo["description"]));
         mainSheet.getRange("O".concat(row_to_edit)).setNote(classInfo["address"].concat("\n".concat(classInfo["city"].concat(", CA ".concat(classInfo["zipcode"])))));
         // P set by dateStuff
-        internal_set("Q", classInfo["schedule_notes"]);
+        internal_set("Q", stripHTML(classInfo["schedule_notes"]));
         internal_set("R", classInfo["name"]);
         internal_set("S", classInfo["id"]);
         // Call to dateStuff changes row T
