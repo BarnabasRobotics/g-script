@@ -9,7 +9,7 @@ function setFormats() {
     mainSheet.getRange("G5:Z1000").setNumberFormat("@");
     mainSheet.getRange("E5:Z1000").setHorizontalAlignment("right");
     mainSheet.getRange("A5:D1000").setHorizontalAlignment("left");
-    mainSheet.getRange("P5:Q1000").setHorizontalAlignment("left");
+    mainSheet.getRange("P5:R1000").setHorizontalAlignment("left");
     mainSheet.hideColumns(18, 9);
 }
 
