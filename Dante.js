@@ -171,7 +171,9 @@ function main() {
         } else if (second_sort == "Lowest level") {
             to_sort.push({column: 25, ascending: true});
         }
-        main_range.sort(to_sort);
+        if (to_sort.length > 0) {
+            main_range.sort(to_sort);
+        }
     }
 
     protection.remove();
