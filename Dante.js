@@ -177,7 +177,7 @@ function main() {
     }
 
     protection.remove();
-    other_protections = mainSheet.getProtections();
+    other_protections = mainSheet.getProtections(SpreadsheetApp.ProtectionType.SHEET);
     for (var i = 0; i < other_protections.length; i++) {
         if (other_protections[i].canEdit() && other_protections[i].getDescription() == "Loading...") {
             other_protections[i].remove();
