@@ -7,7 +7,8 @@ function setFormats() {
     mainSheet.getRange("A5:D1000").setNumberFormat("@");
     mainSheet.getRange("E5:F1000").setNumberFormat("mm/dd/yy");
     mainSheet.getRange("G5:Z1000").setNumberFormat("@");
-    mainSheet.getRange("A5:Z1000").setHorizontalAlignment("right");
+    mainSheet.getRange("E5:Z1000").setHorizontalAlignment("right");
+    mainSheet.getRange("A5:D1000").setHorizontalAlignment("left");
     mainSheet.getRange("P5:Q1000").setHorizontalAlignment("left");
     mainSheet.hideColumns(18, 9);
 }
@@ -174,6 +175,12 @@ function main() {
     }
 
     protection.remove();
+    other_protections = mainSheet.getProtections();
+    for (var i = 0; i < other_protections.length; i++) {
+        if (other_protections[i].canEdit() && other_protections[i].getDescription() == "Loading...") {
+            other_protections[i].remove();
+        }
+    }
 
     function dateStuff(class_dict, row) {
         var class_day;
