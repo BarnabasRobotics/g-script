@@ -4,12 +4,12 @@ function stripHTML(string) {
 
 function setFormats() {
     var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-    mainSheet.getRange("A6:D1000").setNumberFormat("@");
-    mainSheet.getRange("E6:F1000").setNumberFormat("mm/dd/yy");
-    mainSheet.getRange("G6:Z1000").setNumberFormat("@");
-    mainSheet.getRange("E6:Z1000").setHorizontalAlignment("right");
-    mainSheet.getRange("A6:D1000").setHorizontalAlignment("left");
-    mainSheet.getRange("P6:R1000").setHorizontalAlignment("left");
+    mainSheet.getRange("A7:D1000").setNumberFormat("@");
+    mainSheet.getRange("E7:F1000").setNumberFormat("mm/dd/yy");
+    mainSheet.getRange("G7:Z1000").setNumberFormat("@");
+    mainSheet.getRange("E7:Z1000").setHorizontalAlignment("right");
+    mainSheet.getRange("A7:D1000").setHorizontalAlignment("left");
+    mainSheet.getRange("P7:R1000").setHorizontalAlignment("left");
     mainSheet.hideColumns(18, 9);
 }
 
@@ -45,10 +45,10 @@ function convertDate(d) {
 
 function main() {
     var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-    var main_range = mainSheet.getRange("A6:Z1000");
+    var main_range = mainSheet.getRange("A7:Z1000");
     var protection = mainSheet.protect().setDescription("Loading...");
     protection.setWarningOnly(true);
-    var curr_row = 6;
+    var curr_row = 7;
     main_range.clearContent();
     main_range.clearNote();
     setFormats();
@@ -97,11 +97,11 @@ function main() {
     }
 
     // At this point, if A3:Z1000 is empty, no results were returned.
-    var chk_range = mainSheet.getRange("A6");
+    var chk_range = mainSheet.getRange("A7");
     if (chk_range.getValue() == "") {
       chk_range.setValue("Nothing found.");
     } else { // It is fine to proceed with sorting.
-        var first_sort = mainSheet.getRange("B3").getValue();
+        var first_sort = mainSheet.getRange("B4").getValue();
         var to_sort = [];
         if (first_sort == "Title (A to Z)") {
             to_sort.push({column: 2, ascending: true});
@@ -147,7 +147,7 @@ function main() {
             to_sort.push({column: 25, ascending: true});
         }
 
-        var second_sort = mainSheet.getRange("B4").getValue();
+        var second_sort = mainSheet.getRange("B5").getValue();
         if (second_sort == "Title (A to Z)") {
             to_sort.push({column: 2, ascending: true});
         } else if (second_sort == "Title (Z to A)") {
