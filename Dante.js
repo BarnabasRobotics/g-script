@@ -70,6 +70,26 @@ function main() {
         // Assume all locations are to be searched for.
     }
 
+    var filter_teacher = mainSheet.getRange("C2").getValue();
+    var converted_filter_teacher = "*";
+    if (filter_teacher == "Ed") {
+        converted_filter_teacher = "Edward Li";
+    } else if (filter_teacher == "Eric") {
+        converted_filter_teacher = "Eric Lin";
+    } else if (filter_teacher == "Petra") {
+        converted_filter_teacher = "Petra Poschmann";
+    }
+
+    var filter_dur = mainSheet.getRange("B2").getValue();
+    var converted_filter_dur = 0;
+    if (filter_dur == "1-hour/55-minute classes") {
+        converted_filter_dur = [60, 55];
+    } else if (filter_dur == "90-minute classes") {
+        converted_filter_dur = [90];
+    } else if (filter_dur == "2-hour classes") {
+        converted_filter_dur = [120];
+    }
+
     var resp = JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses.json?search%5Bcity%5D=".concat(converted_search_loc)).getContentText());
 
     for (var i = 0; i < resp.length; i++) {
@@ -248,6 +268,30 @@ function main() {
         var row_to_edit = curr_row.toString();
         classInfo = fetchClass(value["id"]);
 
+        if (converted_filter_teacher != "*") {
+            teachers = classInfo["teacher_list"];
+            if (!teachers.includes(converted_filter_teacher)) {
+                return;
+            }
+        }
+
+        // This will be used later to set the column used to sort by duration, but we set it here for filtering
+        // purposes.
+        var class_duration = makeDate(classInfo["end_time"]) - makeDate(classInfo["start_time"]);
+        class_duration /= (1000 * 60);  // convert ms to mins
+
+        if (converted_filter_dur != 0) {
+            if (!converted_filter_dur.includes(class_duration)) {
+                return;
+            }
+        }
+
+        if (filter_day != "All Days") {
+            if (!(classInfo[filter_day.toLowerCase()])) {
+                return;
+            }
+        }
+
         function internal_set(col, val) {
             var to_append = ""
             if (val == null  || val == undefined) {
@@ -256,12 +300,6 @@ function main() {
                 to_append = val.toString();
             }
             mainSheet.getRange(col.concat(row_to_edit)).setValue(to_append);
-        }
-
-        if (filter_day != "All Days") {
-            if (!(classInfo[filter_day.toLowerCase()])) {
-                return;
-            }
         }
 
         internal_set("A", classInfo["address_name"]);
@@ -290,9 +328,7 @@ function main() {
         internal_set("U", seatsLeft);
         internal_set("V", seatsTotal);
         internal_set("W", seatsTaken);
-        var diff = makeDate(classInfo["end_time"]) - makeDate(classInfo["start_time"]);
-        diff /= (1000 * 60);  // convert diff from ms to mins
-        internal_set("X", diff);
+        internal_set("X", class_duration);
         internal_set("Y", classInfo["level_id"]);
         curr_row++;
     }
