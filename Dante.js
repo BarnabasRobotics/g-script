@@ -90,6 +90,16 @@ function main() {
         converted_filter_dur = [120];
     }
 
+    var filter_enrollment = mainSheet.getRange("B3").getValue();
+    var converted_filter_enrollment = 0;
+    if (filter_enrollment == "Empty classes") {
+        converted_filter_enrollment = 1;
+    } else if (filter_enrollment == "Partially filled classes") {
+        converted_filter_enrollment = 2;
+    } else if (filter_enrollment == "Full classes") {
+        converted_filter_enrollment = 3;
+    }
+
     var resp = JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses.json?search%5Bcity%5D=".concat(converted_search_loc)).getContentText());
 
     for (var i = 0; i < resp.length; i++) {
@@ -286,6 +296,23 @@ function main() {
             }
         }
 
+        // These will be used later for sorting and class size column. We set them here for filtering.
+        var seatsTotal = classInfo["class_size"];
+        var seatsLeft = classInfo["seats"];
+        var seatsTaken = seatsTotal - seatsLeft;
+
+        if (converted_filter_enrollment != 0) {
+            if (seatsTaken != 0 && converted_filter_enrollment == 1) {
+                return;
+            }
+            if (seatsLeft != 0 && converted_filter_enrollment == 3) {
+                return;
+            }
+            if ((seatsLeft == 0 || seatsTaken == 0) && converted_filter_enrollment == 2) {
+                return;
+            }
+        }
+
         if (filter_day != "All Days") {
             if (!(classInfo[filter_day.toLowerCase()])) {
                 return;
@@ -310,9 +337,6 @@ function main() {
         internal_set("F", classInfo["end_date"]);
         internal_set("G", classInfo["start_time"]);
         internal_set("H", classInfo["end_time"]);
-        var seatsTotal = classInfo["class_size"];
-        var seatsLeft = classInfo["seats"];
-        var seatsTaken = seatsTotal - seatsLeft;
         internal_set("I", seatsTaken.toString().concat("/".concat(seatsTotal.toString())));
         internal_set("J", classInfo["ages"]);
         internal_set("K", "$".concat(parseInt(classInfo["cost"]) + parseInt(classInfo["charter_fee"])));
