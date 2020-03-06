@@ -264,8 +264,8 @@ function main() {
         var no_cls_dates = [];
 
         while (current_meeting.getTime() <= end_date.getTime()) {  // Not sure whether you can compare Date directly
-            if (!meeting_dates.includes(convertDate(current_meeting))) {
-                if (!no_cls_dates.includes(convertDate(current_meeting))) {
+            if (meeting_dates.indexOf(convertDate(current_meeting)) == -1) {
+                if (no_cls_dates.indexOf(convertDate(current_meeting)) == -1) {
                     no_cls_dates.push(convertDate(current_meeting));
                 }
             }
