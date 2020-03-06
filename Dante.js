@@ -11,7 +11,7 @@ function setFormats() {
     mainSheet.getRange("E9:Z1000").setHorizontalAlignment("right");
     mainSheet.getRange("A9:D1000").setHorizontalAlignment("left");
     mainSheet.getRange("Q9:R1000").setHorizontalAlignment("left");
-    mainSheet.hideColumns(17, 8);
+    mainSheet.hideColumns(19, 8);
 }
 
 function makeDate(string) {
@@ -245,8 +245,8 @@ function main() {
         mainSheet.getRange("C".concat(row)).setValue(class_day);
         mainSheet.getRange("U".concat(row)).setValue(day_id.toString());
 
-        start_date = new Date(class_dict["start_date"]);
-        end_date = new Date(class_dict["end_date"]);
+        var start_date = new Date(class_dict["start_date"]);
+        var end_date = new Date(class_dict["end_date"]);
 
         meeting_dates = JSON.parse(UrlFetchApp.fetch(
             "https://enroll.barnabasrobotics.com/courses/".concat(class_dict["id"]).concat("/schedule.json")
@@ -264,14 +264,32 @@ function main() {
         var no_cls_dates = [];
 
         while (current_meeting.getTime() <= end_date.getTime()) {  // Not sure whether you can compare Date directly
-            if (!meeting_dates.includes((current_meeting.getUTCMonth() + 1).toString().concat("/").concat(current_meeting.getUTCDate()))) {
+            if (!meeting_dates.includes(convertDate(current_meeting))) {
                 if (!no_cls_dates.includes(convertDate(current_meeting))) {
                     no_cls_dates.push(convertDate(current_meeting));
                 }
             }
             current_meeting = new Date(current_meeting.getTime() + 7 * 86400000); // Classes that don't only meet every 7th day don't work yet
         }
+        function addExtraNoClassDates() {
+            if (start_date.getUTCMonth() != end_date.getUTCMonth()) {
+                return;
+            }
+            while (current_meeting.getUTCMonth() == start_date.getUTCMonth()) {
+                no_cls_dates.push(current_meeting);
+                current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
+            }
+            current_meeting = new Date(current_meeting.getTime() - 7 * 86400000);
+            current_meeting.setUTCDate(1);
+            while (current_meeting.getUTCDay() != day_id) {
+                current_meeting = new Date(current_meeting.getTime() + 86400000);
+            }
+            while (current_meeting.getTime() < first_meeting.getTime()) {
+                no_cls_dates.push(current_meeting);
+            }
+        }
 
+        addExtraNoClassDates();
         mainSheet.getRange("Q".concat(row)).setValue(no_cls_dates.join(", "));
     }
 
