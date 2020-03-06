@@ -4,12 +4,12 @@ function stripHTML(string) {
 
 function setFormats() {
     var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-    mainSheet.getRange("A7:D1000").setNumberFormat("@");
-    mainSheet.getRange("E7:F1000").setNumberFormat("mm/dd/yy");
-    mainSheet.getRange("G7:Z1000").setNumberFormat("@");
-    mainSheet.getRange("E7:Z1000").setHorizontalAlignment("right");
-    mainSheet.getRange("A7:D1000").setHorizontalAlignment("left");
-    mainSheet.getRange("P7:R1000").setHorizontalAlignment("left");
+    mainSheet.getRange("A9:D1000").setNumberFormat("@");
+    mainSheet.getRange("E9:F1000").setNumberFormat("mm/dd/yy");
+    mainSheet.getRange("G9:Z1000").setNumberFormat("@");
+    mainSheet.getRange("E9:Z1000").setHorizontalAlignment("right");
+    mainSheet.getRange("A9:D1000").setHorizontalAlignment("left");
+    mainSheet.getRange("P9:R1000").setHorizontalAlignment("left");
     mainSheet.hideColumns(18, 9);
 }
 
@@ -45,15 +45,15 @@ function convertDate(d) {
 
 function main() {
     var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-    var main_range = mainSheet.getRange("A7:Z1000");
+    var main_range = mainSheet.getRange("A9:Z1000");
     var protection = mainSheet.protect().setDescription("Loading...");
     protection.setWarningOnly(true);
-    var curr_row = 7;
+    var curr_row = 9;
     main_range.clearContent();
     main_range.clearNote();
     setFormats();
 
-    var filter_day = mainSheet.getRange("C1").getValue();
+    var filter_day = mainSheet.getRange("B4").getValue();
 
     var search_location = mainSheet.getRange("B1").getValue();
     var converted_search_loc = "";
@@ -70,7 +70,7 @@ function main() {
         // Assume all locations are to be searched for.
     }
 
-    var filter_teacher = mainSheet.getRange("C2").getValue();
+    var filter_teacher = mainSheet.getRange("B5").getValue();
     var converted_filter_teacher = "*";
     if (filter_teacher == "Ed") {
         converted_filter_teacher = "Edward Li";
@@ -107,11 +107,11 @@ function main() {
     }
 
     // At this point, if A3:Z1000 is empty, no results were returned.
-    var chk_range = mainSheet.getRange("A7");
+    var chk_range = mainSheet.getRange("A9");
     if (chk_range.getValue() == "") {
       chk_range.setValue("Nothing found.");
     } else { // It is fine to proceed with sorting.
-        var first_sort = mainSheet.getRange("B4").getValue();
+        var first_sort = mainSheet.getRange("B6").getValue();
         var to_sort = [];
         if (first_sort == "Title (A to Z)") {
             to_sort.push({column: 2, ascending: true});
@@ -157,7 +157,7 @@ function main() {
             to_sort.push({column: 25, ascending: true});
         }
 
-        var second_sort = mainSheet.getRange("B5").getValue();
+        var second_sort = mainSheet.getRange("B7").getValue();
         if (second_sort == "Title (A to Z)") {
             to_sort.push({column: 2, ascending: true});
         } else if (second_sort == "Title (Z to A)") {
