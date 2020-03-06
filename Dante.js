@@ -286,6 +286,7 @@ function main() {
             }
             while (current_meeting.getTime() < first_meeting.getTime()) {
                 no_cls_dates.push(current_meeting);
+                current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
             }
         }
 
