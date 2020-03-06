@@ -276,7 +276,7 @@ function main() {
                 return;
             }
             while (current_meeting.getUTCMonth() == start_date.getUTCMonth()) {
-                no_cls_dates.push(current_meeting);
+                no_cls_dates.push(convertDate(current_meeting));
                 current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
             }
             current_meeting = new Date(current_meeting.getTime() - 7 * 86400000);
@@ -285,7 +285,7 @@ function main() {
                 current_meeting = new Date(current_meeting.getTime() + 86400000);
             }
             while (current_meeting.getTime() < first_meeting.getTime()) {
-                no_cls_dates.push(current_meeting);
+                no_cls_dates.push(convertDate(current_meeting));
                 current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
             }
         }
