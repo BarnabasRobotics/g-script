@@ -1,5 +1,5 @@
 function stripHTML(string) {
-    return string.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&ndash;/g, "-").replace(/\r/, "").replace(/\n/, "");
+    return string.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&ndash;/g, "-").replace(/\r/, "").replace(/\n/, "").replace("/&amp;/g", "&");
 }
 
 function setFormats() {
