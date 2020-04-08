@@ -378,3 +378,72 @@ function main() {
         curr_row++;
     }
 }
+
+function generateReport() {
+    var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Hours Test");
+
+    var month = "3";  // March
+    var resp = JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses.json?search%5Bcity%5D=").getContentText());
+
+    var classes = [];
+    for (var i = 0; i < resp.length; i++) {
+        for (var j = 0; j < resp[i][1].length; j++) {
+            classes.push(resp[i][1][j]);
+        }
+    }
+    var new_classes = [];
+    for (var i = 0; i < classes.length; i++) {
+        schedule = JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses/".concat(classes[i]["id"]).concat("/schedule.json")).getContentText());
+        var found = false;
+        for (var j = 0; j < schedule["session_dates"].length; j++){
+            if (schedule["session_dates"][j].split("/")[0] == month) {
+                found = true;
+            }
+        }
+        if (found) {
+            classes[i]["schedule"] = schedule;
+            classes[i]["info"] = JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses/".concat(classes[i]["id"]).concat("/info.json")).getContentText());
+            new_classes.push(classes[i]);
+        }
+    }
+
+    var hours = {};
+
+    for (var i = 0; i < new_classes.length; i++) {
+        var teachers = new_classes[i]["info"]["teacher_list"];
+
+        var meetings = new_classes[i]["schedule"]["session_dates"];
+        var actual_meetings = [];
+        for (var j = 0; j < meetings.length; j++) {
+            var current_meeting = meetings[j];
+            if (current_meeting.split("/")[0] == month) {
+                actual_meetings.push(current_meeting);
+            }
+        }
+
+        var meeting_duration = makeDate(new_classes[i]["end_time"]) - makeDate(new_classes[i]["start_time"]);
+        meeting_duration /= 1000 * 60 * 60;
+        for (var j = 0; j < teachers.length; j++) {
+            if (hours[teachers[j]] === undefined) {
+                hours[teachers[j]] = [0, 0];
+            }
+            var to_add = meeting_duration * actual_meetings.length;
+            to_add = [Math.floor(to_add), 60 * (to_add % 1)];
+
+            hours[teachers[j]][0] += to_add[0];
+            hours[teachers[j]][1] += to_add[1];
+        }
+    }
+
+    mainSheet.getRange("A2").setValue(hours);
+
+    // var to_write = []
+    
+    // var keys = hours.keys();
+
+    // for (var i = 0; i < keys.length; i++) {
+    //     to_write.push([keys[i], hours[keys[i]]])
+    // }
+
+    // mainSheet.getRange("A2:B100").setValues(to_write);
+}
