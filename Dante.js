@@ -44,6 +44,102 @@ function convertDate(d) {
     return (d.getUTCMonth() + 1).toString().concat("/").concat(d.getUTCDate());
 }
 
+function fullClassList() {
+    /*
+    Convert Barnabas and Bookwhen classes to an identical format.
+    Returns a list of class dicts.
+    Structure:
+    id: string (both)
+    source: string, (both)
+    address: string plaintext address of course (both)
+    description: string, Course info (both)
+    name: string, letter and numbers, (barnabas only)
+    title: string, course name (both)
+    start_date: string, mm-dd-yyyy (both)
+    end_date: string, mm-dd-yyyy (both)
+    start_time: string, "xx:xx" (both)
+    end_time: string, "xx:xx" (both)
+    meeting_dates: list of mm/dd strings (both)
+    no_class_dates: list of mm/dd strings of extrapolated dates where class does not meet when it should (both)
+    notes: string, additional information (barnabas only)
+    tickets: list of ticket dicts (both)
+        id: string, ticket ID (bookwhen only)
+        name: string, ticket name (bookwhen only)
+        seats: int, number of slots total
+        details: string, expanded info about this ticket (bookwhen only)
+        attendees: int, number of current enrollements
+        cost: int cost of ticket
+        instructional_cost: int cost of instruction (barnabas only)
+        charter_fee: int cost for charter school students (barnabas only)
+        kit_fee: int cost for kits (barnabas only)
+        hsc_fee: int referral fee when offering classes through another buisness (barnabas ony)
+        availible_from: string, start date of when the ticket is availible (bookwhen only)
+        availible_to: string, end date of when the ticket is availible (bookwhen only)
+    */
+
+    function fixTime(time) {
+        split_time = time.split(" ");
+        var is_pm = false;
+        if (split_time[1] == "PM") {
+            is_pm = true;
+        }
+        var hour_minute = split_time[0].split(":");
+        var hour = parseInt(hour_minute[0]);
+        var minutes = parseInt(hour_minute[1]);
+        if (is_pm) {
+            hour += 12;
+        }
+        var string_hour = "";
+        if (hour < 10) {
+            
+        }
+    }
+
+    var barnabas = JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses.json?search%5Bcity%5D=").getContentText());
+    var options = {};
+    options.headers = {"Authorization": "Basic " + Utilities.base64Encode("qw482dhb13ujduu46n02kyl2lpcc:")};
+    var bookwhen = JSON.parse(UrlFetchApp.fetch("https://api.bookwhen.com/v2/events?include=tickets.events", options).getContentText());
+    var super_events = bookwhen["data"];
+    var sub_events = bookwhen["included"];
+
+    var final = [];
+
+    for (var i = 0; i < barnabas.length(); i++) {
+        barnabas[i][1].forEach(addBarnabasClass);
+    }
+
+    function addBarnabasClass(class, index) {
+        var info = JSON.parse(UrlFetchApp.fetch(
+            "https://enroll.barnabasrobotics.com/courses/".concat(class["id"]).concat("/info.json")
+        ).getContentText());
+        var sched = JSON.parse(UrlFetchApp.fetch(
+            "https://enroll.barnabasrobotics.com/courses/".concat(class["id"]).concat("/schedule.json")
+        ).getContentText());
+
+        var ret = {};
+        ret["source"] = "barnabas";
+        ret["id"] = info["id"].toString();
+        ret["name"] = info["name"];
+        ret["title"] = info["title"];
+        start_date = info["start_date"].split("-");
+        start_date = [start_date[1], start_date[2], start_date[0]];
+        ret["start_date"] = start_date.join("-");
+        end_date = info["end_date"].split("-");
+        end_date = [end_date[1], end_date[2], end_date[0]];
+        ret["end_date"] = end_date.join("-");
+        final.push(info);
+    }
+
+    function addBookWhenClass(class, index) {
+        var attrs = class["attributes"];
+        var new_dict = attrs;
+
+        new_dict["source"] = "bookwhen";
+        final.push(new_dict);
+    }
+}
+
+
 function main() {
     var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
     var main_range = mainSheet.getRange("A9:Z1000");
