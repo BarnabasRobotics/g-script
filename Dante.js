@@ -71,14 +71,14 @@ function fullClassList() {
         cost: int cost of ticket
         instructional_cost: int cost of instruction (barnabas only)
         charter_fee: int cost for charter school students (barnabas only)
-        kit_fee: int cost for kits (barnabas only)
-        hsc_fee: int referral fee when offering classes through another buisness (barnabas ony)
+        kit_fee: int cost for kits (optional barnabas only)
+        hsc_fee: int referral fee when offering classes through another buisness (optional barnabas only)
         availible_from: string, start date of when the ticket is availible (bookwhen only)
         availible_to: string, end date of when the ticket is availible (bookwhen only)
     */
 
     function fixTime(time) {
-        split_time = time.split(" ");
+        split_time = time.strip().split(" ");
         var is_pm = false;
         if (split_time[1] == "PM") {
             is_pm = true;
@@ -91,8 +91,46 @@ function fullClassList() {
         }
         var string_hour = "";
         if (hour < 10) {
-            
+            string_hour = "0" + hour.toString()
+        } else {
+            string_hour = hour.toString();
         }
+    }
+
+    function noClassDates(info_obj, sched_obj) {
+        var start_date = new Date(info_obj["start_date"]);
+        var end_date = new Date(info_obj["end_date"]);
+        var first_meeting = start_date;
+        var current_meeting = first_meeting;
+        var meeting_dates = sched_obj["session_dates"];
+        var no_cls_dates = [];
+
+        while (current_meeting.getTime() <= end_date.getTime()) {  // Not sure whether you can compare Date directly
+            if (meeting_dates.indexOf(convertDate(current_meeting)) == -1) {
+                if (no_cls_dates.indexOf(convertDate(current_meeting)) == -1) {
+                    no_cls_dates.push(convertDate(current_meeting));
+                }
+            }
+            current_meeting = new Date(current_meeting.getTime() + 7 * 86400000); // Classes that don't only meet every 7th day don't work yet
+        }
+        if (start_date.getUTCMonth() != end_date.getUTCMonth()) {
+            return;
+        }
+        while (current_meeting.getUTCMonth() == start_date.getUTCMonth()) {
+            no_cls_dates.push(convertDate(current_meeting));
+            current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
+        }
+        current_meeting = new Date(current_meeting.getTime() - 7 * 86400000);
+        current_meeting.setUTCDate(1);
+        while (current_meeting.getUTCDay() != day_id) {
+            current_meeting = new Date(current_meeting.getTime() + 86400000);
+        }
+        while (current_meeting.getTime() < first_meeting.getTime()) {
+            no_cls_dates.push(convertDate(current_meeting));
+            current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
+        }
+
+        return no_cls_dates;
     }
 
     var barnabas = JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses.json?search%5Bcity%5D=").getContentText());
@@ -118,6 +156,7 @@ function fullClassList() {
 
         var ret = {};
         ret["source"] = "barnabas";
+        ret["address"] = info["address"].strip() + "\n" + info["city"] + "CA " + info["zipcode"];
         ret["id"] = info["id"].toString();
         ret["name"] = info["name"];
         ret["title"] = info["title"];
@@ -127,6 +166,24 @@ function fullClassList() {
         end_date = info["end_date"].split("-");
         end_date = [end_date[1], end_date[2], end_date[0]];
         ret["end_date"] = end_date.join("-");
+        ret["start_time"] = fixTime(info["start_time"]);
+        ret["end_time"] = fixTime(info["end_time"]);
+        ret["meeting_dates"] = sched["session_dates"];
+        ret["no_class_dates"] = noClassDates(info, sched);
+        ret["notes"] = sched["notes"];
+        var pseudo_ticket = {};
+        pseudo_ticket["seats"] = info["class_size"];
+        pseudo_ticket["attendees"] = info["class_size"] - info["seats"];
+        pseudo_ticket["cost"] = parseInt(info["cost"]);
+        pseudo_ticket["instructional_cost"] = parseInt(info["instructional_fee"]);
+        pseudo_ticket["charter_fee"] = parseInt(info["charter_fee"]);
+        if (!isNull(info["kit_fee"])) {
+            pseudo_ticket["kit_fee"] = info["kit_fee"];
+        }
+        if (!isNull(info["hsc_fee"])) {
+            pseudo_ticket["hsc_fee"] = info["hsc_fee"];
+        }
+
         final.push(info);
     }
 
