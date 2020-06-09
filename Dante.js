@@ -142,16 +142,12 @@ function fullClassList() {
 
     var final = [];
 
-    for (var i = 0; i < barnabas.length(); i++) {
-        barnabas[i][1].forEach(addBarnabasClass);
-    }
-
-    function addBarnabasClass(class, index) {
+    function addBarnabasClass(cls, index) {
         var info = JSON.parse(UrlFetchApp.fetch(
-            "https://enroll.barnabasrobotics.com/courses/".concat(class["id"]).concat("/info.json")
+            "https://enroll.barnabasrobotics.com/courses/".concat(cls["id"]).concat("/info.json")
         ).getContentText());
         var sched = JSON.parse(UrlFetchApp.fetch(
-            "https://enroll.barnabasrobotics.com/courses/".concat(class["id"]).concat("/schedule.json")
+            "https://enroll.barnabasrobotics.com/courses/".concat(cls["id"]).concat("/schedule.json")
         ).getContentText());
 
         var ret = {};
@@ -187,13 +183,19 @@ function fullClassList() {
         final.push(info);
     }
 
-    function addBookWhenClass(class, index) {
-        var attrs = class["attributes"];
+    function addBookWhenClass(cls, index) {
+        var attrs = cls["attributes"];
         var new_dict = attrs;
 
         new_dict["source"] = "bookwhen";
         final.push(new_dict);
     }
+
+    for (var i = 0; i < barnabas.length(); i++) {
+        barnabas[i][1].forEach(addBarnabasClass);
+    }
+
+
 }
 
 
