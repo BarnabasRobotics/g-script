@@ -72,7 +72,7 @@ function fullClassList() {
         kit_fee: int cost for kits (optional barnabas only)
         hsc_fee: int referral fee when offering classes through another buisness (optional barnabas only)
         availible_from: optional Date, start date of when the ticket is availible (bookwhen only)
-        availible_to: Date, end date of when the ticket is availible (bookwhen only)
+        availible_to: optional Date, end date of when the ticket is availible (bookwhen only)
     */
 
     function fixTime(date, time) {
