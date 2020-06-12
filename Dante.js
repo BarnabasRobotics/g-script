@@ -55,10 +55,8 @@ function fullClassList() {
     description: string, Course info (both)
     name: string, letter and numbers, (barnabas only)
     title: string, course name (both)
-    start_date: string, mm-dd-yyyy (both)
-    end_date: string, mm-dd-yyyy (both)
-    start_time: string, "xx:xx" (both)
-    end_time: string, "xx:xx" (both)
+    start_date: Date (both)
+    end_date: Date (both)
     meeting_dates: list of mm/dd strings (both)
     no_class_dates: list of mm/dd strings of extrapolated dates where class does not meet when it should (both)
     notes: string, additional information (barnabas only)
@@ -73,15 +71,18 @@ function fullClassList() {
         charter_fee: int cost for charter school students (barnabas only)
         kit_fee: int cost for kits (optional barnabas only)
         hsc_fee: int referral fee when offering classes through another buisness (optional barnabas only)
-        availible_from: string, start date of when the ticket is availible (bookwhen only)
-        availible_to: string, end date of when the ticket is availible (bookwhen only)
+        availible_from: optional Date, start date of when the ticket is availible (bookwhen only)
+        availible_to: Date, end date of when the ticket is availible (bookwhen only)
     */
 
-    function fixTime(time) {
-        split_time = time.strip().split(" ");
+    function fixTime(date, time) {
+        split_date = date.split("-");
+        var ret = new Date([start_date[1], start_date[2], start_date[0]]);
+
+        var split_time = time.split(" ");
         var is_pm = false;
-        if (split_time[1] == "PM") {
-            is_pm = true;
+        if (time[1] == "PM") {
+            split_time = true;
         }
         var hour_minute = split_time[0].split(":");
         var hour = parseInt(hour_minute[0]);
@@ -89,20 +90,14 @@ function fullClassList() {
         if (is_pm) {
             hour += 12;
         }
-        var string_hour = "";
-        if (hour < 10) {
-            string_hour = "0" + hour.toString()
-        } else {
-            string_hour = hour.toString();
-        }
+        ret.setUTCHours(hour);
+        ret.setUTCMinutes(minutes);
+        return ret;
     }
 
-    function noClassDates(info_obj, sched_obj) {
-        var start_date = new Date(info_obj["start_date"]);
-        var end_date = new Date(info_obj["end_date"]);
+    function noClassDates(start_date, end_date, meeting_dates) {
         var first_meeting = start_date;
         var current_meeting = first_meeting;
-        var meeting_dates = sched_obj["session_dates"];
         var no_cls_dates = [];
 
         while (current_meeting.getTime() <= end_date.getTime()) {  // Not sure whether you can compare Date directly
@@ -133,12 +128,19 @@ function fullClassList() {
         return no_cls_dates;
     }
 
+    function makeMMDD(date) {
+        var mm = (date.getUTCMonth().toString()).padStart(2, "0");
+        var dd = (date.getUTCDate().toString()).padStart(2, "0");
+        return mm + "/" + dd;
+    }
+
+
     var barnabas = JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses.json?search%5Bcity%5D=").getContentText());
     var options = {};
     options.headers = {"Authorization": "Basic " + Utilities.base64Encode("qw482dhb13ujduu46n02kyl2lpcc:")};
-    var bookwhen = JSON.parse(UrlFetchApp.fetch("https://api.bookwhen.com/v2/events?include=tickets.events", options).getContentText());
+    var bookwhen = JSON.parse(UrlFetchApp.fetch("https://api.bookwhen.com/v2/events?include=tickets,tickets.events,location", options).getContentText());
     var super_events = bookwhen["data"];
-    var sub_events = bookwhen["included"];
+    var included = bookwhen["included"];
 
     var final = [];
 
@@ -156,16 +158,16 @@ function fullClassList() {
         ret["id"] = info["id"].toString();
         ret["name"] = info["name"];
         ret["title"] = info["title"];
-        start_date = info["start_date"].split("-");
-        start_date = [start_date[1], start_date[2], start_date[0]];
-        ret["start_date"] = start_date.join("-");
+        ret["description"] = info["description"];
+        ret["start_date"] = fixTime(info["start_date"], info["start_time"]);
+        ret["end_date"] = fixTime(info["end_date"], info["end_time"]);
         end_date = info["end_date"].split("-");
         end_date = [end_date[1], end_date[2], end_date[0]];
-        ret["end_date"] = end_date.join("-");
+        ret["end_date"] = new Date(end_date.join("-"));
         ret["start_time"] = fixTime(info["start_time"]);
         ret["end_time"] = fixTime(info["end_time"]);
         ret["meeting_dates"] = sched["session_dates"];
-        ret["no_class_dates"] = noClassDates(info, sched);
+        ret["no_class_dates"] = noClassDates(info["start_date"], info["end_date"], sched["session_dates"]);
         ret["notes"] = sched["notes"];
         var pseudo_ticket = {};
         pseudo_ticket["seats"] = info["class_size"];
@@ -179,22 +181,86 @@ function fullClassList() {
         if (!isNull(info["hsc_fee"])) {
             pseudo_ticket["hsc_fee"] = info["hsc_fee"];
         }
-
-        final.push(info);
+        ret["tickets"] = [pseudo_ticket];
+        final.push(ret);
     }
 
     function addBookWhenClass(cls, index) {
         var attrs = cls["attributes"];
-        var new_dict = attrs;
+        var new_dict = {};
 
+        var sub_events = [];
+        var mini_id = cls["id"].split("-")[1];
+        for (var i = 0; i < included.length(); i++) {
+            if (included[i]["type"] === "event") {
+                var sub_mini_id = included[i]["id"].split("-")[1];
+                if (mini_id === sub_mini_id) {
+                    sub_events.push(included[i]);
+                }
+            }
+        }
+
+        new_dict["id"] = cls["id"];
         new_dict["source"] = "bookwhen";
+        var loc_id = cls["relationships"]["location"]["data"];
+        var loc;
+        for (var i = 0; i < included.length(); i++) {
+            if (included[i]["id"] == loc_id) {
+                loc = included[i];
+            }
+        }
+        new_dict["address"] = loc["attributes"]["address_text"] + "\n" + loc["attributes"]["additional_info"];
+        new_dict["description"] = attrs["details"];
+        new_dict["title"] = attrs["title"];
+        new_dict["start_date"] = new Date(attrs["start_at"]);
+        new_dict["end_date"] = new Date(attrs["end_at"]);
+        var session_dates = [];
+        for (var i = 0; i < sub_events.length(); i++) {
+            var date = new Date(sub_events[i]["attributes"]["start_at"]);
+            session_dates.push(makeMMDD(date));
+        }
+        new_dict["meeting_dates"] = session_dates;
+        new_dict["no_class_dates"] = noClassDates(makeMMDD(cls["start_at"]), makeMMDD(cls["end_at"]), session_dates);
+
+        var ticketobjs = cls["relationships"]["tickets"]["data"];
+        var ticket_ids = [];
+        for (var i = 0; i < ticketobjs.length(); i++) {
+            ticket_ids.push(ticketobjs[i]["id"]);
+        }
+        ticketobjs = [];
+        for (var i = 0; i < included.length(); i++) {
+            if (ticket_ids.includes(included[i]["id"])) {
+                ticketobjs.push(included[i]);
+            }
+        }
+        var tickets_to_push = [];
+        for (var i = 0; i < ticketobjs.length(); i++) {
+            var running_ticket = ticketobjs[i];
+            var new_ticket = {};
+            new_ticket["id"] = running_ticket["id"];
+            new_ticket["name"] = running_ticket["attributes"]["title"];
+            new_ticket["seats"] = running_ticket["attributes"]["group_max"];
+            new_ticket["details"] = running_ticket["attributes"]["details"];
+            new_ticket["attendees"] = running_ticket["attributes"]["number_taken"];
+            new_ticket["cost"] = running_ticket["attributes"]["cost"]["net"] / 100;
+            var availible_from = running_ticket["attributes"]["availible_from"];
+            var availible_to = running_ticket["attributes"]["availible_to"];
+            if (!isNull(availible_from)) {
+                new_ticket["availible_from"] = new Date(availible_from);
+            }
+            if (!isNull(avalible_to)) {
+                new_ticket["availible_to"] = new Date(availible_to);
+            }
+            tickets_to_push.push(new_ticket);
+        }
+        new_dict["tickets"] = tickets_to_push;
         final.push(new_dict);
     }
 
     for (var i = 0; i < barnabas.length(); i++) {
         barnabas[i][1].forEach(addBarnabasClass);
     }
-
+    super_events.forEach(addBookWhenClass);
 
 }
 
