@@ -41,13 +41,31 @@ function fetchClass(id) {
 }
 
 function makeXMXD(d) {
-    return (d.getUTCMonth() + 1).toString().concat("/").concat(d.getUTCDate());
+    return (d.getMonth() + 1).toString().concat("/").concat(d.getDate());
 }
 
 function makeMMDD(date) {
-    var mm = (date.getUTCMonth().toString()).padStart(2, "0");
-    var dd = (date.getUTCDate().toString()).padStart(2, "0");
-    return mm + "/" + dd;
+    return Utilities.formatDate(date, "PST", "MM:dd");
+}
+
+function fixTime(date, time) {
+    split_date = date.split("-");
+    var ret = new Date([split_date[1], split_date[2], split_date[0]]);
+
+    var split_time = time.split(" ");
+    var is_pm = false;
+    if (time[1] == "PM") {
+        split_time = true;
+    }
+    var hour_minute = split_time[0].split(":");
+    var hour = parseInt(hour_minute[0]);
+    var minutes = parseInt(hour_minute[1]);
+    if (is_pm) {
+        hour += 12;
+    }
+    ret.setHours(hour);
+    ret.setMinutes(minutes);
+    return ret;
 }
 
 function fullClassList() {
@@ -67,6 +85,7 @@ function fullClassList() {
     no_class_dates: list of mm/dd strings of extrapolated dates where class does not meet when it should (both)
     teachers: list of teacher names (barnabas only)
     notes: string, additional information (barnabas only)
+    ages: string, age range of class (barnabas only)
     tickets: list of ticket dicts (both)
         id: string, ticket ID (bookwhen only)
         name: string, ticket name (bookwhen only)
@@ -81,26 +100,6 @@ function fullClassList() {
         availible_from: optional Date, start date of when the ticket is availible (bookwhen only)
         availible_to: optional Date, end date of when the ticket is availible (bookwhen only)
     */
-
-    function fixTime(date, time) {
-        split_date = date.split("-");
-        var ret = new Date([split_date[1], split_date[2], split_date[0]]);
-
-        var split_time = time.split(" ");
-        var is_pm = false;
-        if (time[1] == "PM") {
-            split_time = true;
-        }
-        var hour_minute = split_time[0].split(":");
-        var hour = parseInt(hour_minute[0]);
-        var minutes = parseInt(hour_minute[1]);
-        if (is_pm) {
-            hour += 12;
-        }
-        ret.setUTCHours(hour);
-        ret.setUTCMinutes(minutes);
-        return ret;
-    }
 
     function noClassDates(start_date, end_date, meeting_dates) {
         var first_meeting = start_date;
@@ -170,6 +169,7 @@ function fullClassList() {
         ret["no_class_dates"] = noClassDates(info["start_date"], info["end_date"], sched["session_dates"]);
         ret["teachers"] = info["teacher_list"];
         ret["notes"] = sched["notes"];
+        ret["ages"] = info["ages"].strip();  // sometimes comes with whitespace
         var pseudo_ticket = {};
         pseudo_ticket["seats"] = info["class_size"];
         pseudo_ticket["attendees"] = info["class_size"] - info["seats"];
@@ -438,9 +438,15 @@ function main() {
         }
 
         // These will be used later for sorting and class size column. We set them here for filtering.
-        var seatsTotal = classInfo["class_size"];
-        var seatsLeft = classInfo["seats"];
-        var seatsTaken = seatsTotal - seatsLeft;
+        var seatsTotal;
+        var seatsTaken;
+        function add_ticket_to_total(t, i) {
+            seatsTotal += t["seats"];
+            seatsTaken += t["attendees"];
+        }
+        classInfo["tickets"].forEach(add_ticket_to_total);
+        var seatsLeft = seatsTotal - seatsTaken;
+
 
         if (converted_filter_enrollment != 0) {
             if (seatsTaken != 0 && converted_filter_enrollment == 1) {
@@ -475,16 +481,19 @@ function main() {
         if (!isNull(class_info["teacher_list"])) {
             internal_set("C", classInfo["teacher_list"].join(", "));
         }
-        internal_set("D", makeMMDD(classInfo["start_date"]));
-        internal_set("E", makeMMDD(classInfo["end_date"]));
-        internal_set("F", classInfo["start_time"]);
-        internal_set("G", classInfo["end_time"]);
+        internal_set("D", makeXMXD(classInfo["start_date"]));
+        internal_set("E", makeXMXD(classInfo["end_date"]));
+        internal_set("F", Utilities.formatDate(classInfo["start_time"], "PST", "hh:ss a"));
+        internal_set("G", Utilities.formatDate(classInfo["end_time"], "PST", "hh:ss a"));
         internal_set("H", seatsTaken.toString().concat("/".concat(seatsTotal.toString())));
-        internal_set("I", classInfo["ages"]);
-        internal_set("J", "$".concat(parseInt(classInfo["cost"]) + parseInt(classInfo["charter_fee"])));
-        internal_set("K", "$".concat(parseInt(seatsTaken) * parseInt(classInfo["cost"])));
-        internal_set("L", classInfo["cancel_deadline"]);
-        mainSheet.getRange("M".concat(row_to_edit)).setNote(classInfo["prerequisites"]);
+        if (!isNumm(classInfo["ages"])) {
+            internal_set("I", classInfo["ages"]);
+        }
+        var first_ticket = classInfo["tickets"][0];
+        internal_set("J", "$".concat(first_ticket["cost"] + first_ticket["charter_fee"]));
+        internal_set("K", "$".concat(seatsTaken * first_ticket["cost"]));
+        // internal_set("L", classInfo["cancel_deadline"]);
+        // mainSheet.getRange("M".concat(row_to_edit)).setNote(classInfo["prerequisites"]);
         mainSheet.getRange("N".concat(row_to_edit)).setNote(stripHTML(classInfo["description"]));
         mainSheet.getRange("O".concat(row_to_edit)).setNote(classInfo["address"].concat("\n".concat(classInfo["city"].concat(", CA ".concat(classInfo["zipcode"])))));
         // P set by dateStuff
@@ -496,7 +505,7 @@ function main() {
         internal_set("V", seatsTotal);
         internal_set("W", seatsTaken);
         internal_set("X", class_duration);
-        internal_set("Y", classInfo["level_id"]);
+        // internal_set("Y", classInfo["level_id"]);
         curr_row++;
     }
 }
