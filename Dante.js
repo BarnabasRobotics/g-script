@@ -4,13 +4,13 @@ function stripHTML(string) {
 
 function setFormats() {
     var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-    mainSheet.getRange("A9:D1000").setNumberFormat("@");
-    mainSheet.getRange("E9:F1000").setNumberFormat("mm/dd/yy");
-    mainSheet.getRange("G9:Z1000").setNumberFormat("@");
-    mainSheet.getRange("M9:M1000").setNumberFormat("mm/dd/yy");
-    mainSheet.getRange("E9:Z1000").setHorizontalAlignment("right");
-    mainSheet.getRange("A9:D1000").setHorizontalAlignment("left");
-    mainSheet.getRange("Q9:R1000").setHorizontalAlignment("left");
+    mainSheet.getRange("A7:D1000").setNumberFormat("@");
+    mainSheet.getRange("E7:F1000").setNumberFormat("mm/dd/yy");
+    mainSheet.getRange("G7:Z1000").setNumberFormat("@");
+    mainSheet.getRange("M7:M1000").setNumberFormat("mm/dd/yy");
+    mainSheet.getRange("E7:Z1000").setHorizontalAlignment("right");
+    mainSheet.getRange("A7:D1000").setHorizontalAlignment("left");
+    mainSheet.getRange("Q7:R1000").setHorizontalAlignment("left");
     mainSheet.hideColumns(19, 8);
 }
 
@@ -40,8 +40,14 @@ function fetchClass(id) {
     return JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses/".concat(id).concat("/info.json")).getContentText());
 }
 
-function convertDate(d) {
+function makeXMXD(d) {
     return (d.getUTCMonth() + 1).toString().concat("/").concat(d.getUTCDate());
+}
+
+function makeMMDD(date) {
+    var mm = (date.getUTCMonth().toString()).padStart(2, "0");
+    var dd = (date.getUTCDate().toString()).padStart(2, "0");
+    return mm + "/" + dd;
 }
 
 function fullClassList() {
@@ -59,6 +65,7 @@ function fullClassList() {
     end_date: Date (both)
     meeting_dates: list of mm/dd strings (both)
     no_class_dates: list of mm/dd strings of extrapolated dates where class does not meet when it should (both)
+    teachers: list of teacher names (barnabas only)
     notes: string, additional information (barnabas only)
     tickets: list of ticket dicts (both)
         id: string, ticket ID (bookwhen only)
@@ -77,7 +84,7 @@ function fullClassList() {
 
     function fixTime(date, time) {
         split_date = date.split("-");
-        var ret = new Date([start_date[1], start_date[2], start_date[0]]);
+        var ret = new Date([split_date[1], split_date[2], split_date[0]]);
 
         var split_time = time.split(" ");
         var is_pm = false;
@@ -101,9 +108,9 @@ function fullClassList() {
         var no_cls_dates = [];
 
         while (current_meeting.getTime() <= end_date.getTime()) {  // Not sure whether you can compare Date directly
-            if (meeting_dates.indexOf(convertDate(current_meeting)) == -1) {
-                if (no_cls_dates.indexOf(convertDate(current_meeting)) == -1) {
-                    no_cls_dates.push(convertDate(current_meeting));
+            if (meeting_dates.indexOf(makeXMXD(current_meeting)) == -1) {
+                if (no_cls_dates.indexOf(makeXMXD(current_meeting)) == -1) {
+                    no_cls_dates.push(makeXMXD(current_meeting));
                 }
             }
             current_meeting = new Date(current_meeting.getTime() + 7 * 86400000); // Classes that don't only meet every 7th day don't work yet
@@ -112,7 +119,7 @@ function fullClassList() {
             return;
         }
         while (current_meeting.getUTCMonth() == start_date.getUTCMonth()) {
-            no_cls_dates.push(convertDate(current_meeting));
+            no_cls_dates.push(makeXMXD(current_meeting));
             current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
         }
         current_meeting = new Date(current_meeting.getTime() - 7 * 86400000);
@@ -121,19 +128,12 @@ function fullClassList() {
             current_meeting = new Date(current_meeting.getTime() + 86400000);
         }
         while (current_meeting.getTime() < first_meeting.getTime()) {
-            no_cls_dates.push(convertDate(current_meeting));
+            no_cls_dates.push(makeXMXD(current_meeting));
             current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
         }
 
         return no_cls_dates;
     }
-
-    function makeMMDD(date) {
-        var mm = (date.getUTCMonth().toString()).padStart(2, "0");
-        var dd = (date.getUTCDate().toString()).padStart(2, "0");
-        return mm + "/" + dd;
-    }
-
 
     var barnabas = JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses.json?search%5Bcity%5D=").getContentText());
     var options = {};
@@ -154,7 +154,7 @@ function fullClassList() {
 
         var ret = {};
         ret["source"] = "barnabas";
-        ret["address"] = info["address"].strip() + "\n" + info["city"] + "CA " + info["zipcode"];
+        ret["address"] = info["address"].trim() + "\n" + info["city"] + "CA " + info["zipcode"];
         ret["id"] = info["id"].toString();
         ret["name"] = info["name"];
         ret["title"] = info["title"];
@@ -168,6 +168,7 @@ function fullClassList() {
         ret["end_time"] = fixTime(info["end_time"]);
         ret["meeting_dates"] = sched["session_dates"];
         ret["no_class_dates"] = noClassDates(info["start_date"], info["end_date"], sched["session_dates"]);
+        ret["teachers"] = info["teacher_list"];
         ret["notes"] = sched["notes"];
         var pseudo_ticket = {};
         pseudo_ticket["seats"] = info["class_size"];
@@ -191,7 +192,7 @@ function fullClassList() {
 
         var sub_events = [];
         var mini_id = cls["id"].split("-")[1];
-        for (var i = 0; i < included.length(); i++) {
+        for (var i = 0; i < included.length; i++) {
             if (included[i]["type"] === "event") {
                 var sub_mini_id = included[i]["id"].split("-")[1];
                 if (mini_id === sub_mini_id) {
@@ -204,7 +205,7 @@ function fullClassList() {
         new_dict["source"] = "bookwhen";
         var loc_id = cls["relationships"]["location"]["data"];
         var loc;
-        for (var i = 0; i < included.length(); i++) {
+        for (var i = 0; i < included.length; i++) {
             if (included[i]["id"] == loc_id) {
                 loc = included[i];
             }
@@ -215,7 +216,7 @@ function fullClassList() {
         new_dict["start_date"] = new Date(attrs["start_at"]);
         new_dict["end_date"] = new Date(attrs["end_at"]);
         var session_dates = [];
-        for (var i = 0; i < sub_events.length(); i++) {
+        for (var i = 0; i < sub_events.length; i++) {
             var date = new Date(sub_events[i]["attributes"]["start_at"]);
             session_dates.push(makeMMDD(date));
         }
@@ -224,17 +225,17 @@ function fullClassList() {
 
         var ticketobjs = cls["relationships"]["tickets"]["data"];
         var ticket_ids = [];
-        for (var i = 0; i < ticketobjs.length(); i++) {
+        for (var i = 0; i < ticketobjs.length; i++) {
             ticket_ids.push(ticketobjs[i]["id"]);
         }
         ticketobjs = [];
-        for (var i = 0; i < included.length(); i++) {
+        for (var i = 0; i < included.length; i++) {
             if (ticket_ids.includes(included[i]["id"])) {
                 ticketobjs.push(included[i]);
             }
         }
         var tickets_to_push = [];
-        for (var i = 0; i < ticketobjs.length(); i++) {
+        for (var i = 0; i < ticketobjs.length; i++) {
             var running_ticket = ticketobjs[i];
             var new_ticket = {};
             new_ticket["id"] = running_ticket["id"];
@@ -257,7 +258,7 @@ function fullClassList() {
         final.push(new_dict);
     }
 
-    for (var i = 0; i < barnabas.length(); i++) {
+    for (var i = 0; i < barnabas.length; i++) {
         barnabas[i][1].forEach(addBarnabasClass);
     }
     super_events.forEach(addBookWhenClass);
@@ -267,42 +268,17 @@ function fullClassList() {
 
 function main() {
     var mainSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dante's Workspace");
-    var main_range = mainSheet.getRange("A9:Z1000");
+    var main_range = mainSheet.getRange("A7:Z1000");
     var protection = mainSheet.protect().setDescription("Loading...");
     protection.setWarningOnly(true);
-    var curr_row = 9;
+    var curr_row = 7;
     main_range.clearContent();
     main_range.clearNote();
     setFormats();
 
-    var filter_day = mainSheet.getRange("B4").getValue();
+    var filter_day = mainSheet.getRange("B3").getValue();
 
-    var search_location = mainSheet.getRange("B1").getValue();
-    var converted_search_loc = "";
-    if (search_location == "All Locations") {
-
-    } else if (search_location == "Arcadia (FUNdamentals)") {
-        converted_search_loc = "Arcadia";
-    } else if (search_location == "Monrovia (EIE)") {
-        converted_search_loc = "Monrovia";
-    } else if (search_location == "Pasadena (Barnabas HQ)") {
-        converted_search_loc = "Pasadena";
-    } else {
-        // There is some sort of invalid input here.
-        // Assume all locations are to be searched for.
-    }
-
-    var filter_teacher = mainSheet.getRange("B5").getValue();
-    var converted_filter_teacher = "*";
-    if (filter_teacher == "Ed") {
-        converted_filter_teacher = "Edward Li";
-    } else if (filter_teacher == "Eric") {
-        converted_filter_teacher = "Eric Lin";
-    } else if (filter_teacher == "Petra") {
-        converted_filter_teacher = "Petra Poschmann";
-    }
-
-    var filter_dur = mainSheet.getRange("B2").getValue();
+    var filter_dur = mainSheet.getRange("B1").getValue();
     var converted_filter_dur = 0;
     if (filter_dur == "1-hour/55-minute classes") {
         converted_filter_dur = [60, 55];
@@ -312,7 +288,7 @@ function main() {
         converted_filter_dur = [120];
     }
 
-    var filter_enrollment = mainSheet.getRange("B3").getValue();
+    var filter_enrollment = mainSheet.getRange("B2").getValue();
     var converted_filter_enrollment = 0;
     if (filter_enrollment == "Empty classes") {
         converted_filter_enrollment = 1;
@@ -322,106 +298,104 @@ function main() {
         converted_filter_enrollment = 3;
     }
 
-    var resp = JSON.parse(UrlFetchApp.fetch("https://enroll.barnabasrobotics.com/courses.json?search%5Bcity%5D=".concat(converted_search_loc)).getContentText());
+    var resp = fullClassList();
 
-    for (var i = 0; i < resp.length; i++) {
-        resp[i][1].forEach(addToSheet);
-    }
+    resp.forEach(addToSheet);
 
-    // At this point, if A3:Z1000 is empty, no results were returned.
-    var chk_range = mainSheet.getRange("A9");
+    // At this point, if A7:Z1000 is empty, no results were returned.
+    var chk_range = mainSheet.getRange("A7");
     if (chk_range.getValue() == "") {
       chk_range.setValue("Nothing found.");
     } else { // It is fine to proceed with sorting.
-        var first_sort = mainSheet.getRange("B6").getValue();
+        var first_sort = mainSheet.getRange("B4").getValue();
         var to_sort = [];
         if (first_sort == "Title (A to Z)") {
-            to_sort.push({column: 2, ascending: true});
+            to_sort.push({column: 1, ascending: true});
         } else if (first_sort == "Title (Z to A)") {
-            to_sort.push({column: 2, ascending: false});
+            to_sort.push({column: 1, ascending: false});
         } else if (first_sort == "Location") {
-            to_sort.push({column: 3, ascending: true});
+            to_sort.push({column: 2, ascending: true});
         } else if (first_sort == "Teacher") {
-            to_sort.push({column: 4, ascending: true});
+            to_sort.push({column: 3, ascending: true});
         } else if (first_sort == "Highest cost") {
-            to_sort.push({column: 11, ascending: false});
+            to_sort.push({column: 10, ascending: false});
         } else if (first_sort == "Lowest cost") {
-            to_sort.push({column: 11, ascending: true});
+            to_sort.push({column: 10, ascending: true});
         } else if (first_sort == "Highest expected revenue") {
-            to_sort.push({column: 12, ascending: false});
+            to_sort.push({column: 11, ascending: false});
         } else if (first_sort == "Lowest expected revenue") {
             to_sort.push({column: 12, ascending: true});
         } else if (first_sort == "Day of week (MTWTFSS) and time (forwards)") {
-            to_sort.push({column: 21, ascending: true});
-            to_sort.push({column: 7, ascending: true});
+            to_sort.push({column: 20, ascending: true});
+            to_sort.push({column: 6, ascending: true});
         } else if (first_sort == "Day of week (SSFTWTM) and time (backwards)") {
-            to_sort.push({column: 21, ascending: false});
-            to_sort.push({column: 7, ascending: false});
+            to_sort.push({column: 20, ascending: false});
+            to_sort.push({column: 6, ascending: false});
         } else if (first_sort == "Most seats remaining") {
-            to_sort.push({column: 22, ascending: false});
+            to_sort.push({column: 21, ascending: false});
         } else if (first_sort == "Least seats remaining") {
-            to_sort.push({column: 22, ascending: true});
+            to_sort.push({column: 21, ascending: true});
         } else if (first_sort == "Largest capacity") {
-            to_sort.push({column: 23, ascending: true});
+            to_sort.push({column: 22, ascending: true});
         } else if (first_sort == "Smallest capacity") {
-            to_sort.push({column: 23, ascending: false});
+            to_sort.push({column: 22, ascending: false});
         } else if (first_sort == "Most students") {
-            to_sort.push({column: 24, ascending: false});
+            to_sort.push({column: 23, ascending: false});
         } else if (first_sort == "Least students") {
-            to_sort.push({column: 24, ascending: true});
+            to_sort.push({column: 23, ascending: true});
         } else if (first_sort == "Longest meeting duration") {
-            to_sort.push({column: 25, ascending: false});
+            to_sort.push({column: 24, ascending: false});
         } else if (first_sort == "Shortest meeting duration") {
-            to_sort.push({column: 25, ascending: true});
+            to_sort.push({column: 24, ascending: true});
         } else if (first_sort == "Highest level") {
-            to_sort.push({column: 26, ascending: false});
+            to_sort.push({column: 25, ascending: false});
         } else if (first_sort == "Lowest level") {
-            to_sort.push({column: 26, ascending: true});
+            to_sort.push({column: 25, ascending: true});
         }
 
         var second_sort = mainSheet.getRange("B7").getValue();
         if (second_sort == "Title (A to Z)") {
-            to_sort.push({column: 2, ascending: true});
+            to_sort.push({column: 1, ascending: true});
         } else if (second_sort == "Title (Z to A)") {
-            to_sort.push({column: 2, ascending: false});
+            to_sort.push({column: 1, ascending: false});
         } else if (second_sort == "Location") {
-            to_sort.push({column: 3, ascending: true});
+            to_sort.push({column: 2, ascending: true});
         } else if (second_sort == "Teacher") {
-            to_sort.push({column: 4, ascending: true});
+            to_sort.push({column: 3, ascending: true});
         } else if (second_sort == "Highest cost") {
-            to_sort.push({column: 11, ascending: false});
+            to_sort.push({column: 10, ascending: false});
         } else if (second_sort == "Lowest cost") {
-            to_sort.push({column: 11, ascending: true});
+            to_sort.push({column: 10, ascending: true});
         } else if (second_sort == "Highest expected revenue") {
-            to_sort.push({column: 12, ascending: false});
+            to_sort.push({column: 11, ascending: false});
         } else if (second_sort == "Lowest expected revenue") {
-            to_sort.push({column: 12, ascending: true});
+            to_sort.push({column: 11, ascending: true});
         } else if (second_sort == "Day of week (MTWTFSS) and time (forwards)") {
-            to_sort.push({column: 21, ascending: true});
-            to_sort.push({column: 7, ascending: true});
+            to_sort.push({column: 20, ascending: true});
+            to_sort.push({column: 6, ascending: true});
         } else if (second_sort == "Day of week (SSFTWTM) and time (backwards)") {
-            to_sort.push({column: 21, ascending: false});
-            to_sort.push({column: 7, ascending: false});
+            to_sort.push({column: 20, ascending: false});
+            to_sort.push({column: 6, ascending: false});
         } else if (second_sort == "Most seats remaining") {
-            to_sort.push({column: 22, ascending: false});
+            to_sort.push({column: 21, ascending: false});
         } else if (second_sort == "Least seats remaining") {
-            to_sort.push({column: 22, ascending: true});
+            to_sort.push({column: 21, ascending: true});
         } else if (second_sort == "Largest capacity") {
-            to_sort.push({column: 23, ascending: true});
+            to_sort.push({column: 22, ascending: true});
         } else if (second_sort == "Smallest capacity") {
-            to_sort.push({column: 23, ascending: false});
+            to_sort.push({column: 22, ascending: false});
         } else if (second_sort == "Most students") {
-            to_sort.push({column: 24, ascending: false});
+            to_sort.push({column: 23, ascending: false});
         } else if (second_sort == "Least students") {
-            to_sort.push({column: 24, ascending: true});
+            to_sort.push({column: 23, ascending: true});
         } else if (second_sort == "Longest meeting duration") {
-            to_sort.push({column: 25, ascending: false});
+            to_sort.push({column: 24, ascending: false});
         } else if (second_sort == "Shortest meeting duration") {
-            to_sort.push({column: 25, ascending: true});
+            to_sort.push({column: 24, ascending: true});
         } else if (second_sort == "Highest level") {
-            to_sort.push({column: 26, ascending: false});
+            to_sort.push({column: 25, ascending: false});
         } else if (second_sort == "Lowest level") {
-            to_sort.push({column: 26, ascending: true});
+            to_sort.push({column: 25, ascending: true});
         }
         if (to_sort.length > 0) {
             main_range.sort(to_sort);
@@ -435,100 +409,26 @@ function main() {
             other_protections[i].remove();
         }
     }
+    var days_of_week = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    var day_id = new Date(class_dict["meeting_dates"][0]).getDay();
+    var class_day = days_of_week[day_id];
 
-    function dateStuff(class_dict, row) {
-        var class_day;
-        if (class_dict["sunday"]) {
-            class_day = "Sunday";
-            day_id = 0;
-        } else if (class_dict["monday"]) {
-            class_day = "Monday";
-            day_id = 1;
-        } else if (class_dict["tuesday"]) {
-            class_day = "Tuesday";
-            day_id = 2;
-        } else if (class_dict["wednesday"]) {
-            class_day = "Wednesday";
-            day_id = 3;
-        } else if (class_dict["thursday"]) {
-            class_day = "Thursday";
-            day_id = 4;
-        } else if (class_dict["friday"]) {
-             class_day = "Friday";
-             day_id = 5;
-        } else if (class_dict["saturday"]) {
-            class_day = "Saturday";
-            day_id = 6;
-        } else {
-            class_day = "?";
-            day_id = 7;
-        }
-        mainSheet.getRange("C".concat(row)).setValue(class_day);
-        mainSheet.getRange("U".concat(row)).setValue(day_id.toString());
+    function dateStuff() {
+        mainSheet.getRange("B".concat(row)).setValue(class_day);
+        mainSheet.getRange("T".concat(row)).setValue(day_id.toString());
 
-        var start_date = new Date(class_dict["start_date"]);
-        var end_date = new Date(class_dict["end_date"]);
-
-        meeting_dates = JSON.parse(UrlFetchApp.fetch(
-            "https://enroll.barnabasrobotics.com/courses/".concat(class_dict["id"]).concat("/schedule.json")
-        ).getContentText())["session_dates"];
-
-        var first_meeting = new Date(start_date);
-        // while (first_meeting.getDay() != day_id) {
-        //     // first_meeting.setDay(first_meeting.getDate() + 1); leaves potential issues with the last day of
-        //     // the month, as we might be trying to make a new date for September 32nd, for example.
-        //     // instead we add 86400000 milliseconds, which is a day.
-        //     first_meeting = new Date(first_meeting.getTime() + 86400000);
-        // }
-
-        var current_meeting = first_meeting;
-        var no_cls_dates = [];
-
-        while (current_meeting.getTime() <= end_date.getTime()) {  // Not sure whether you can compare Date directly
-            if (meeting_dates.indexOf(convertDate(current_meeting)) == -1) {
-                if (no_cls_dates.indexOf(convertDate(current_meeting)) == -1) {
-                    no_cls_dates.push(convertDate(current_meeting));
-                }
-            }
-            current_meeting = new Date(current_meeting.getTime() + 7 * 86400000); // Classes that don't only meet every 7th day don't work yet
-        }
-        function addExtraNoClassDates() {
-            if (start_date.getUTCMonth() != end_date.getUTCMonth()) {
-                return;
-            }
-            while (current_meeting.getUTCMonth() == start_date.getUTCMonth()) {
-                no_cls_dates.push(convertDate(current_meeting));
-                current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
-            }
-            current_meeting = new Date(current_meeting.getTime() - 7 * 86400000);
-            current_meeting.setUTCDate(1);
-            while (current_meeting.getUTCDay() != day_id) {
-                current_meeting = new Date(current_meeting.getTime() + 86400000);
-            }
-            while (current_meeting.getTime() < first_meeting.getTime()) {
-                no_cls_dates.push(convertDate(current_meeting));
-                current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
-            }
-        }
-
-        addExtraNoClassDates();
-        mainSheet.getRange("Q".concat(row)).setValue(no_cls_dates.join(", "));
+        var ncd = class_dict["no_class_dates"]
+        var ncd_to_push = [];
+        ncd.forEach(function(d, i) {ncd_to_push.push(makeMMDD(d))});
+        mainSheet.getRange("P".concat(row)).setValue(ncd_to_push.join(", "));
     }
 
-    function addToSheet(value, _index) {
+    function addToSheet(classInfo, _index) {
         var row_to_edit = curr_row.toString();
-        classInfo = fetchClass(value["id"]);
-
-        if (converted_filter_teacher != "*") {
-            teachers = classInfo["teacher_list"];
-            if (!teachers.includes(converted_filter_teacher)) {
-                return;
-            }
-        }
 
         // This will be used later to set the column used to sort by duration, but we set it here for filtering
         // purposes.
-        var class_duration = makeDate(classInfo["end_time"]) - makeDate(classInfo["start_time"]);
+        var class_duration = (1000 * 60 * 60 * 24) % (classInfo["end_time"] - classInfo["start_time"]);
         class_duration /= (1000 * 60);  // convert ms to mins
 
         if (converted_filter_dur != 0) {
@@ -555,7 +455,7 @@ function main() {
         }
 
         if (filter_day != "All Days") {
-            if (!(classInfo[filter_day.toLowerCase()])) {
+            if (class_day != filter_day) {
                 return;
             }
         }
@@ -570,32 +470,33 @@ function main() {
             mainSheet.getRange(col.concat(row_to_edit)).setValue(to_append);
         }
 
-        internal_set("A", classInfo["address_name"]);
-        internal_set("B", classInfo["title"]);
+        internal_set("A", classInfo["title"]);
         dateStuff(classInfo, row_to_edit);
-        internal_set("D", classInfo["teacher_list"].join(", "));
-        internal_set("E", classInfo["start_date"]);
-        internal_set("F", classInfo["end_date"]);
-        internal_set("G", classInfo["start_time"]);
-        internal_set("H", classInfo["end_time"]);
-        internal_set("I", seatsTaken.toString().concat("/".concat(seatsTotal.toString())));
-        internal_set("J", classInfo["ages"]);
-        internal_set("K", "$".concat(parseInt(classInfo["cost"]) + parseInt(classInfo["charter_fee"])));
-        internal_set("L", "$".concat(parseInt(seatsTaken) * parseInt(classInfo["cost"])));
-        internal_set("M", classInfo["cancel_deadline"]);
-        mainSheet.getRange("N".concat(row_to_edit)).setNote(classInfo["prerequisites"]);
-        mainSheet.getRange("O".concat(row_to_edit)).setNote(stripHTML(classInfo["description"]));
-        mainSheet.getRange("P".concat(row_to_edit)).setNote(classInfo["address"].concat("\n".concat(classInfo["city"].concat(", CA ".concat(classInfo["zipcode"])))));
-        // Q set by dateStuff
-        internal_set("R", stripHTML(classInfo["schedule_notes"]));
-        internal_set("S", classInfo["name"]);
-        internal_set("T", classInfo["id"]);
-        // Call to dateStuff changes row U
-        internal_set("V", seatsLeft);
-        internal_set("W", seatsTotal);
-        internal_set("X", seatsTaken);
-        internal_set("Y", class_duration);
-        internal_set("Z", classInfo["level_id"]);
+        if (!isNull(class_info["teacher_list"])) {
+            internal_set("C", classInfo["teacher_list"].join(", "));
+        }
+        internal_set("D", makeMMDD(classInfo["start_date"]));
+        internal_set("E", makeMMDD(classInfo["end_date"]));
+        internal_set("F", classInfo["start_time"]);
+        internal_set("G", classInfo["end_time"]);
+        internal_set("H", seatsTaken.toString().concat("/".concat(seatsTotal.toString())));
+        internal_set("I", classInfo["ages"]);
+        internal_set("J", "$".concat(parseInt(classInfo["cost"]) + parseInt(classInfo["charter_fee"])));
+        internal_set("K", "$".concat(parseInt(seatsTaken) * parseInt(classInfo["cost"])));
+        internal_set("L", classInfo["cancel_deadline"]);
+        mainSheet.getRange("M".concat(row_to_edit)).setNote(classInfo["prerequisites"]);
+        mainSheet.getRange("N".concat(row_to_edit)).setNote(stripHTML(classInfo["description"]));
+        mainSheet.getRange("O".concat(row_to_edit)).setNote(classInfo["address"].concat("\n".concat(classInfo["city"].concat(", CA ".concat(classInfo["zipcode"])))));
+        // P set by dateStuff
+        internal_set("Q", stripHTML(classInfo["schedule_notes"]));
+        internal_set("R", classInfo["name"]);
+        internal_set("S", classInfo["id"]);
+        // Call to dateStuff changes row T
+        internal_set("U", seatsLeft);
+        internal_set("V", seatsTotal);
+        internal_set("W", seatsTaken);
+        internal_set("X", class_duration);
+        internal_set("Y", classInfo["level_id"]);
         curr_row++;
     }
 }
