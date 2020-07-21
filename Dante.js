@@ -1,5 +1,9 @@
 function stripHTML(string) {
-    return string.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&ndash;/g, "-").replace(/\r/, "").replace(/\n/, "").replace("/&amp;/g", "&");
+    return string.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&ndash;/g, "-").replace(/\r\n/, "\n").replace("/&amp;/g", "&");
+}
+
+function cleanAddress(addr) {
+    return addr.replace(/\r\n/g, "\n").replace(/\n/g, ", ");
 }
 
 function setFormats() {
@@ -101,13 +105,16 @@ function fullClassList() {
     */
 
     function noClassDates(start_date, end_date, meeting_dates) {
+        if (!(meeting_dates.length)) {
+            return [];
+        }
         var first_meeting = start_date;
         var current_meeting = new Date(first_meeting.getTime());
         var no_cls_dates = [];
 
         while (current_meeting.getTime() <= end_date.getTime()) {  // Not sure whether you can compare Date directly
-            if (meeting_dates.indexOf(makeXMXD(current_meeting)) == -1) {
-                if (no_cls_dates.indexOf(makeXMXD(current_meeting)) == -1) {
+            if (!meeting_dates.includes(makeXMXD(current_meeting))) {
+                if (!no_cls_dates.includes(makeXMXD(current_meeting))) {
                     no_cls_dates.push(makeXMXD(current_meeting));
                 }
             }
@@ -125,9 +132,9 @@ function fullClassList() {
         while (current_meeting.getUTCDay() != first_meeting.getUTCDay()) {
             current_meeting = new Date(current_meeting.getTime() + 86400000);
         }
-        while (current_meeting.getUTCTime() < first_meeting.getUTCTime()) {
+        while (current_meeting.getTime() < first_meeting.getTime()) {
             no_cls_dates.push(makeXMXD(current_meeting));
-            current_meeting = new Date(current_meeting.getUTCTime() + 7 * 86400000);
+            current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
         }
 
         return no_cls_dates;
@@ -152,7 +159,7 @@ function fullClassList() {
 
         var ret = {};
         ret["source"] = "barnabas";
-        ret["address"] = info["address"].trim() + "\n" + info["city"] + ", CA " + info["zipcode"];
+        ret["address"] = info["address"].trim() + " " + info["city"] + ", CA " + info["zipcode"];
         ret["id"] = info["id"].toString();
         ret["name"] = info["name"];
         ret["title"] = info["title"];
@@ -162,10 +169,10 @@ function fullClassList() {
         end_date = info["end_date"].split("-");
         end_date = [end_date[1], end_date[2], end_date[0]];
         ret["end_date"] = new Date(end_date.join("-"));
-        ret["meeting_dates"] = sched["session_dates"].join(", ");
-        // ret["no_class_dates"] = noClassDates(new Date(info["start_date"]), new Date(info["end_date"]), sched["session_dates"]);
+        ret["meeting_dates"] = sched["session_dates"];
+        ret["no_class_dates"] = noClassDates(new Date(info["start_date"]), new Date(info["end_date"]), sched["session_dates"]);
         ret["teachers"] = info["teacher_list"];
-        ret["notes"] = sched["notes"];
+        ret["notes"] = stripHTML(sched["notes"]);
         ret["ages"] = info["ages"].trim();  // sometimes comes with whitespace
         var pseudo_ticket = {};
         pseudo_ticket["seats"] = info["class_size"];
@@ -208,7 +215,7 @@ function fullClassList() {
                 loc = included[i];
             }
         }
-        var addr = stripHTML(loc["attributes"]["address_text"].trim());
+        var addr = cleanAddress(loc["attributes"]["address_text"].trim());
         if (!(loc["attributes"]["additional_info"] == null || loc["attributes"]["additional_info"] == "")) {
             addr += "\n" + loc["attributes"]["additional_info"];
         }
@@ -222,7 +229,7 @@ function fullClassList() {
             var date = new Date(sub_events[i]["attributes"]["start_at"]);
             session_dates.push(makeMMDD(date));
         }
-        new_dict["meeting_dates"] = session_dates.join(", ");
+        new_dict["meeting_dates"] = session_dates;
         new_dict["no_class_dates"] = noClassDates(new Date(cls["start_at"]), new Date(cls["end_at"]), session_dates);
 
         var ticketobjs = cls["relationships"]["tickets"]["data"];
@@ -434,7 +441,7 @@ function main() {
             if (!(ncd == null)) {
                 var ncd_to_push = []; 
                 function fe (d, i) {
-                    ncd_to_push.push(makeMMDD(d));
+                    ncd_to_push.push(makeMMDD(new Date(d)));
                 }
                 ncd.forEach(fe);
                 mainSheet.getRange("O".concat(row_to_edit)).setValue(ncd_to_push.join(", "));
@@ -495,6 +502,8 @@ function main() {
         internal_set("I", seatsTaken.toString().concat("/".concat(seatsTotal.toString())));
         if (!(classInfo["ages"] == null)) {
             internal_set("J", classInfo["ages"]);
+        } else {
+            internal_set("J", "?");
         }
         var first_ticket = classInfo["tickets"][0];
         var charter_fee = first_ticket["charter_fee"]
@@ -508,10 +517,10 @@ function main() {
         }
         mainSheet.getRange("N".concat(row_to_edit)).setNote(stripHTML(classInfo["description"]));
         // O set by dateStuff
-        if (!(classInfo["schedule_notes"] == null)) {
-            internal_set("P", stripHTML(classInfo["schedule_notes"]));
+        if (!(classInfo["notes"] == null)) {
+            internal_set("P", stripHTML(classInfo["notes"]));
         }
-        internal_set("Q", classInfo["meeting_dates"]);
+        internal_set("Q", classInfo["meeting_dates"].join(", "));
         internal_set("R", classInfo["name"]);
         internal_set("S", classInfo["id"]);
         // Call to dateStuff changes row T
