@@ -1,5 +1,5 @@
 function stripHTML(string) {
-    return string.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&ndash;/g, "-").replace(/\r\n/, "\n").replace("/&amp;/g", "&");
+    return string.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&ndash;/g, "-").replace(/\r\n/, "\n").replace("/&amp;/g", "&").trim();
 }
 
 function cleanAddress(addr) {
@@ -23,15 +23,15 @@ function makeDate(string) {
     var d = new Date();
     if (isPM) {
         if (times[0] == "12") {
-            d.setHours(12, parseInt(times[1]));
+            d.setUTCHours(12, parseInt(times[1]));
         } else {
-            d.setHours(parseInt(times[0]) + 12, parseInt(times[1]));
+            d.setUTCHours(parseInt(times[0]) + 12, parseInt(times[1]));
         }
     } else {
         if (times[0] == "12") {
-            d.setHours(0, parseInt(times[1]));
+            d.setUTCHours(0, parseInt(times[1]));
         } else {
-            d.setHours(parseInt(times[0]), parseInt(times[1]));
+            d.setUTCHours(parseInt(times[0]), parseInt(times[1]));
         }
     }
     d.setFullYear(1970, 2, 1);
@@ -44,31 +44,17 @@ function fetchClass(id) {
 }
 
 function makeXMXD(d) {
-    return (d.getUTCMonth() + 1).toString().concat("/").concat(d.getDate().toString());
+    return (d.getUTCMonth() + 1).toString().concat("/").concat(d.getUTCDate().toString());
 }
 
 function makeMMDD(date) {
-    return Utilities.formatDate(date, "PST", "MM/dd");
+    return Utilities.formatDate(date, "UTC", "MM/dd");
 }
 
 function fixTime(date, time_) {
-    split_date = date.split("-");
-    var ret = new Date([split_date[1], split_date[2], split_date[0]]);
-
-    var split_time = time_.trim().split(" ");
-    var is_pm = false;
-    if (time_[1] == "PM") {
-        split_time = true;
-    }
-    var hour_minute = split_time[0].split(":");
-    var hour = parseInt(hour_minute[0]);
-    var minutes = parseInt(hour_minute[1]);
-    if (is_pm) {
-        hour += 12;
-    }
-    ret.setHours(hour);
-    ret.setMinutes(minutes);
-    return ret;
+    var date = date.trim();
+    var time_ = time_.trim();
+    return new Date(date + " " + time_ + " -0000");
 }
 
 function fullClassList() {
@@ -107,15 +93,23 @@ function fullClassList() {
     function noClassDates(start_date, end_date, meeting_dates) {
         if (!(meeting_dates.length)) {
             return [];
+        } else {
+            var first_day = new Date(meeting_dates[0]).getUTCDay();
+            for (var i = 0 ; i < meeting_dates.length; i++) {
+                if (new Date(meeting_dates[i]).getUTCDay() !== first_day) {
+                    return [];
+                }
+            }
         }
+
         var first_meeting = start_date;
         var current_meeting = new Date(first_meeting.getTime());
         var no_cls_dates = [];
 
         while (current_meeting.getTime() <= end_date.getTime()) {  // Not sure whether you can compare Date directly
             if (!meeting_dates.includes(makeXMXD(current_meeting))) {
-                if (!no_cls_dates.includes(makeXMXD(current_meeting))) {
-                    no_cls_dates.push(makeXMXD(current_meeting));
+                if (!no_cls_dates.includes(makeMMDD(current_meeting))) {
+                    no_cls_dates.push(makeMMDD(current_meeting));
                 }
             }
             current_meeting = new Date(current_meeting.getTime() + 7 * 86400000); // Classes that don't only meet every 7th day don't work yet
@@ -124,16 +118,20 @@ function fullClassList() {
             return;
         }
         while (current_meeting.getUTCMonth() == start_date.getUTCMonth()) {
-            no_cls_dates.push(makeXMXD(current_meeting));
+            if (!no_cls_dates.includes(makeMMDD(current_meeting))) {
+                no_cls_dates.push(makeMMDD(current_meeting));
+            }
             current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
         }
-        current_meeting = new Date(current_meeting.getTime() - 7 * 86400000);
+        current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
         current_meeting.setUTCDate(1);
         while (current_meeting.getUTCDay() != first_meeting.getUTCDay()) {
             current_meeting = new Date(current_meeting.getTime() + 86400000);
         }
         while (current_meeting.getTime() < first_meeting.getTime()) {
-            no_cls_dates.push(makeXMXD(current_meeting));
+            if (!no_cls_dates.includes(makeMMDD(current_meeting))) {
+                no_cls_dates.push(makeMMDD(current_meeting));
+            }
             current_meeting = new Date(current_meeting.getTime() + 7 * 86400000);
         }
 
@@ -166,9 +164,6 @@ function fullClassList() {
         ret["description"] = info["description"];
         ret["start_date"] = fixTime(info["start_date"], info["start_time"]);
         ret["end_date"] = fixTime(info["end_date"], info["end_time"]);
-        end_date = info["end_date"].split("-");
-        end_date = [end_date[1], end_date[2], end_date[0]];
-        ret["end_date"] = new Date(end_date.join("-"));
         ret["meeting_dates"] = sched["session_dates"];
         ret["no_class_dates"] = noClassDates(new Date(info["start_date"]), new Date(info["end_date"]), sched["session_dates"]);
         ret["teachers"] = info["teacher_list"];
@@ -222,8 +217,8 @@ function fullClassList() {
         new_dict["address"] = addr;
         new_dict["description"] = attrs["details"];
         new_dict["title"] = attrs["title"];
-        new_dict["start_date"] = new Date(attrs["start_at"]);
-        new_dict["end_date"] = new Date(attrs["end_at"]);
+        new_dict["start_date"] = new Date(attrs["start_at"].substring(0, attrs["start_at"].length - 6) + "-00:00");
+        new_dict["end_date"] = new Date(attrs["end_at"].substring(0, attrs["end_at"].length - 6) + "-00:00");
         var session_dates = [];
         for (var i = 0; i < sub_events.length; i++) {
             var date = new Date(sub_events[i]["attributes"]["start_at"]);
@@ -313,7 +308,7 @@ function main() {
     resp.forEach(addToSheet);
 
     // At this point, if A7:Z1000 is empty, no results were returned.
-    var chk_range = mainSheet.getRange("F7");
+    var chk_range = mainSheet.getRange("A7");
     if (chk_range.getValue() == "") {
       chk_range.setValue("Nothing found.");
     } else { // It is fine to proceed with sorting.
@@ -418,33 +413,42 @@ function main() {
         // This will be used later to set the column used to sort by duration, but we set it here for filtering
         // purposes.
         var end_time = new Date(classInfo["end_date"]);
-        end_time.setUTCDate(classInfo["start_date"].getUTCDay());
+        end_time.setUTCDate(classInfo["start_date"].getUTCDate());
         end_time.setUTCMonth(classInfo["start_date"].getUTCMonth());
-        var class_duration = (1000 * 60 * 60 * 24) % (classInfo["end_date"] - classInfo["start_date"]);
+        var class_duration = (classInfo["end_date"] - classInfo["start_date"]) % (1000 * 60 * 60 * 24);
         class_duration /= (1000 * 60);  // convert ms to mins
 
         if (converted_filter_dur != 0) {
-            if (!converted_filter_dur.includes(class_duration)) {
+            if (!(converted_filter_dur.includes(class_duration))) {
                 return;
             }
         }
 
-        var days_of_week = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        var days_of_week = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "???"];
         var day_id = new Date(classInfo["meeting_dates"][0]).getUTCDay();
+        var all_days = [];
         var class_day = days_of_week[day_id];
+        if (day_id == NaN) {
+            var class_day = "???";
+            day_id = -1;
+        } else {
+            var class_day = days_of_week[day_id];
+        }
+
+        for (var i = 0; i < classInfo["session_dates"]; i++) {
+            var day = new Date(classInfo["session_dates"][i]).getUTCDay();
+            if (day != NaN && !all_days.includes(days_of_week[day])) {
+                all_days.push(days_of_week[day]);
+            }
+        }
 
         function dateStuff() {
             mainSheet.getRange("C".concat(row_to_edit)).setValue(class_day);
             mainSheet.getRange("T".concat(row_to_edit)).setValue(day_id.toString());
+            if (classInfo["no_class_dates"] == null) {
 
-            var ncd = classInfo["no_class_dates"];
-            if (!(ncd == null)) {
-                var ncd_to_push = []; 
-                function fe (d, i) {
-                    ncd_to_push.push(makeMMDD(new Date(d)));
-                }
-                ncd.forEach(fe);
-                mainSheet.getRange("O".concat(row_to_edit)).setValue(ncd_to_push.join(", "));
+            } else {
+                mainSheet.getRange("O".concat(row_to_edit)).setValue(classInfo["no_class_dates"].join(", "));
             }
         }
 
@@ -456,6 +460,11 @@ function main() {
             seatsTaken += t["attendees"];
         }
         classInfo["tickets"].forEach(add_ticket_to_total);
+        if (seatsTaken > seatsTotal) {
+            var swap = seatsTaken;
+            seatsTaken = seatsTotal;
+            seatsTotal = swap;
+        }
         var seatsLeft = seatsTotal - seatsTaken;
 
 
@@ -472,7 +481,7 @@ function main() {
         }
 
         if (filter_day != "All Days") {
-            if (class_day != filter_day) {
+            if (!(all_days.includes(filter_day))) {
                 return;
             }
         }
@@ -497,8 +506,8 @@ function main() {
         }
         internal_set("E", makeXMXD(classInfo["start_date"]));
         internal_set("F", makeXMXD(classInfo["end_date"]));
-        internal_set("G", Utilities.formatDate(new Date(classInfo["start_date"]), "PST", "hh:ss a"));
-        internal_set("H", Utilities.formatDate(new Date(classInfo["end_date"]), "PST", "hh:ss a"));
+        internal_set("G", Utilities.formatDate(new Date(classInfo["start_date"]), "UTC", "hh:mm a"));
+        internal_set("H", Utilities.formatDate(new Date(classInfo["end_date"]), "UTC", "hh:mm a"));
         internal_set("I", seatsTaken.toString().concat("/".concat(seatsTotal.toString())));
         if (!(classInfo["ages"] == null)) {
             internal_set("J", classInfo["ages"]);
