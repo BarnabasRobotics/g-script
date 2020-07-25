@@ -11,6 +11,7 @@ function setFormats() {
     mainSheet.getRange("A7:D1000").setNumberFormat("@");
     mainSheet.getRange("E7:F1000").setNumberFormat("mm/dd/yy");
     mainSheet.getRange("G7:Z1000").setNumberFormat("@");
+    mainSheet.getRange("K7:L1000").setNumberFormat("$#,####0.00");
     mainSheet.getRange("E7:Z1000").setHorizontalAlignment("right");
     mainSheet.getRange("A7:D1000").setHorizontalAlignment("left");
     mainSheet.getRange("T7:Z1000").setHorizontalAlignment("left");
@@ -487,7 +488,7 @@ function main() {
                 internal_set("O", "??");
                 return;
             }
-            if (classInfo["no_class_dates"] == null) {
+            if (classInfo["no_class_dates"] == null || classInfo["no_class_dates"].length == 0) {
                 internal_set("O", "??");
                 return;
             } else {
